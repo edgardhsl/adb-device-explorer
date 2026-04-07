@@ -40,7 +40,7 @@ This project uses an automated semantic versioning and release system powered by
 
 1. **Branches:** Feature branches should be merged into the `main` branch via Pull Requests.
 2. **Version Bumps:** When a Pull Request is merged into the `main` branch, a GitHub Action (`anothrNick/github-tag-action`) will automatically analyze the commit messages to determine the next semantic version bump (patch, minor, or major) and generate a new tag (e.g., `v1.0.1`).
-3. **Releases:** Creating a new tag starting with `v` automatically triggers another GitHub Action to build the application for multiple platforms (Windows, macOS, Linux) and create a new GitHub Release draft containing the compiled binaries.
+3. **Releases:** After a tag is created, the Release GitHub Action must be triggered **manually**. Go to the Actions tab, select the Release workflow, and click "Run workflow". The action will automatically retrieve the latest generated tag, build the application for multiple platforms (Windows, macOS, Linux) and create a new GitHub Release draft containing the compiled binaries.
 
 ## Development Setup
 

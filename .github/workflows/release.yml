@@ -1,8 +1,6 @@
 name: Release
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -24,6 +22,15 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Get latest tag
+        id: get_tag
+        shell: bash
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          echo "tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -50,8 +57,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'ADB Device Explorer ${{ github.ref_name }}'
+          tagName: ${{ steps.get_tag.outputs.tag }}
+          releaseName: 'ADB Device Explorer ${{ steps.get_tag.outputs.tag }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
