@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/edgardhsl/adbfly/blob/main/LICENSE)
 
 <p align="center">
-  <img src="./public/images/logo.webp" alt="ADB Fly - Light and Dark Theme" />
+  <img src="./public/images/logo.webp" alt="ADB Fly - Light and Dark Theme" width="160" />
 </p>
 
 **Browse and manage SQLite databases on Android devices via ADB**
@@ -14,6 +14,12 @@
 [English](./README.md) · [Português](./README.pt-BR.md) · [Español](./README.es.md)
 
 </div>
+
+---
+
+<p align="center">
+  <img src="./public/images/app.png" alt="ADB Fly app screenshot" width="980" />
+</p>
 
 ---
 

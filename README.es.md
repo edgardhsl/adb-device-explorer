@@ -5,7 +5,9 @@
 [![Versión](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/edgardhsl/adbfly)
 [![Licencia](https://img.shields.io/badge/license-MIT-green)](https://github.com/edgardhsl/adbfly/blob/main/LICENSE)
 
-<img src="./public/images/logo.webp" alt="ADB Fly - Tema Claro y Oscuro" />
+<img src="./public/images/logo.webp" alt="ADB Fly - Tema Claro y Oscuro" width="160" />
+
+<img src="./public/images/app.png" alt="Captura de pantalla de ADB Fly" width="980" />
 
 **Navega y gestiona bases de datos SQLite en dispositivos Android vía ADB**
 
