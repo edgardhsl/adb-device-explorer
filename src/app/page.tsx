@@ -478,7 +478,7 @@ function AppContent() {
                     <span className="truncate">{device.model}</span>
                     <span className={cn(
                       "w-1.5 h-1.5 rounded-full shrink-0 ml-auto",
-                      device.status === "device" ? "bg-green-500" : "bg-muted-foreground/40"
+                      device.status === "device" ? "bg-success" : "bg-muted-foreground/40"
                     )} />
                   </button>
 
@@ -814,7 +814,7 @@ function AppContent() {
                             key={rowKey}
                             className={cn(
                               "hover:bg-accent/50 group",
-                              rowHasPendingChanges && "bg-amber-50 dark:bg-amber-950/20"
+                              rowHasPendingChanges && "bg-warning-soft"
                             )}
                           >
                             {tableData.columns.map((col, colIdx) => (
@@ -860,7 +860,7 @@ function AppContent() {
                                     getPendingDisplayValue(row, rowIdx, col) === null
                                       ? "text-muted-foreground italic"
                                       : "text-foreground",
-                                    pendingRowEdits[rowKey]?.changes[col] !== undefined && "text-amber-600 dark:text-amber-400"
+                                    pendingRowEdits[rowKey]?.changes[col] !== undefined && "text-warning"
                                   )}>
                                     {getValueLabel(getPendingDisplayValue(row, rowIdx, col))}
                                   </span>

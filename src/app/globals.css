@@ -15,7 +15,9 @@
     --primary-hover: #4338ca;
     --accent-soft: #e0e7ff;
     --success: #059669;
+    --success-soft: #dcfce7;
     --warning: #d97706;
+    --warning-soft: #fef3c7;
     --danger: #dc2626;
 
     --on-surface: var(--text);
@@ -64,7 +66,9 @@
     --primary-hover: #4338ca;
     --accent-soft: #2a2768;
     --success: #059669;
+    --success-soft: #14532d;
     --warning: #d97706;
+    --warning-soft: #78350f;
     --danger: #dc2626;
 
     --on-surface: var(--text);
