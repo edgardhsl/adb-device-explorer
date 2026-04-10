@@ -25,15 +25,35 @@ impl SqliteRepository {
         let temp_dir =
             tempfile::tempdir().map_err(|e| format!("Failed to create temp dir: {}", e))?;
 
-        let local_path = temp_dir.path().join(db_name);
-        let _local_path_str = local_path.to_string_lossy().to_string();
+        let remote_db = format!("databases/{}", db_name);
+        let local_db = temp_dir.path().join(db_name);
 
-        let data = self.adb.pull_database_base64(device_id, package, db_name)?;
+        let db_bytes = self
+            .adb
+            .pull_app_file_snapshot(device_id, package, &remote_db)
+            .map_err(|e| format!("Failed to pull database snapshot '{}': {}", remote_db, e))?;
+        std::fs::write(&local_db, db_bytes)
+            .map_err(|e| format!("Failed to write local database snapshot: {}", e))?;
 
-        std::fs::write(&local_path, data)
-            .map_err(|e| format!("Failed to write database file: {}", e))?;
+        for suffix in ["-wal", "-shm"] {
+            let remote_sidecar = format!("{}{}", remote_db, suffix);
+            let local_sidecar = temp_dir.path().join(format!("{}{}", db_name, suffix));
 
-        Ok((temp_dir, local_path))
+            if let Some(bytes) =
+                self.adb
+                    .pull_app_file_snapshot_optional(device_id, package, &remote_sidecar)?
+            {
+                std::fs::write(&local_sidecar, bytes).map_err(|e| {
+                    format!(
+                        "Failed to write local sqlite sidecar '{}': {}",
+                        local_sidecar.display(),
+                        e
+                    )
+                })?;
+            }
+        }
+
+        Ok((temp_dir, local_db))
     }
 
     pub fn list_databases(
@@ -273,33 +293,57 @@ impl SqliteRepository {
                 .filter_map(|r| r.ok())
                 .collect();
 
-            Ok(SqlResult {
+            return Ok(SqlResult {
                 success: true,
                 message: format!("{} rows returned", rows.len()),
                 columns: column_names,
                 rows,
                 rows_affected: 0,
-            })
-        } else {
-            let rows_affected =
-                conn.execute(sql, [])
-                    .map_err(|e| format!("Failed to execute: {}", e))? as u64;
-
-            drop(conn);
-
-            let data = std::fs::read(&local_path)
-                .map_err(|e| format!("Failed to read modified database: {}", e))?;
-
-            self.adb
-                .push_database(device_id, package_name, db_name, &data)?;
-
-            Ok(SqlResult {
-                success: true,
-                message: format!("{} rows affected", rows_affected),
-                columns: vec![],
-                rows: vec![],
-                rows_affected,
-            })
+            });
         }
+
+        let rows_affected = conn
+            .execute(sql, [])
+            .map_err(|e| format!("Failed to execute: {}", e))? as u64;
+        drop(conn);
+
+        let local_db = std::fs::read(&local_path)
+            .map_err(|e| format!("Failed to read modified database: {}", e))?;
+        let remote_db = format!("databases/{}", db_name);
+        self.adb
+            .push_app_file_snapshot(device_id, package_name, &remote_db, &local_db)?;
+
+        for suffix in ["-wal", "-shm"] {
+            let local_sidecar = local_path.with_file_name(format!("{}{}", db_name, suffix));
+            let remote_sidecar = format!("{}{}", remote_db, suffix);
+
+            if local_sidecar.exists() {
+                let sidecar_data = std::fs::read(&local_sidecar).map_err(|e| {
+                    format!(
+                        "Failed to read sqlite sidecar '{}': {}",
+                        local_sidecar.display(),
+                        e
+                    )
+                })?;
+                self.adb.push_app_file_snapshot(
+                    device_id,
+                    package_name,
+                    &remote_sidecar,
+                    &sidecar_data,
+                )?;
+            } else {
+                let _ = self
+                    .adb
+                    .delete_app_file_snapshot(device_id, package_name, &remote_sidecar);
+            }
+        }
+
+        Ok(SqlResult {
+            success: true,
+            message: format!("{} rows affected", rows_affected),
+            columns: vec![],
+            rows: vec![],
+            rows_affected,
+        })
     }
 }

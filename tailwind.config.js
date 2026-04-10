@@ -11,6 +11,40 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        background: "var(--background)",
+        foreground: "var(--text)",
+        border: "var(--border)",
+        input: "var(--border)",
+        ring: "var(--primary)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--on-primary)",
+        },
+        secondary: {
+          DEFAULT: "var(--surface-alt)",
+          foreground: "var(--text)",
+        },
+        destructive: {
+          DEFAULT: "var(--danger)",
+          foreground: "#ffffff",
+        },
+        muted: {
+          DEFAULT: "var(--surface-alt)",
+          foreground: "var(--text-muted)",
+        },
+        accent: {
+          DEFAULT: "var(--accent-soft)",
+          foreground: "var(--text)",
+        },
+        popover: {
+          DEFAULT: "var(--surface)",
+          foreground: "var(--text)",
+        },
+        card: {
+          DEFAULT: "var(--surface)",
+          foreground: "var(--text)",
+        },
+
         "on-surface": "var(--on-surface)",
         "on-surface-variant": "var(--on-surface-variant)",
         "tertiary-container": "var(--tertiary-container)",
@@ -45,44 +79,11 @@ module.exports = {
         "surface-container-lowest": "var(--surface-container-lowest)",
         "secondary-container": "var(--secondary-container)",
         "error-container": "var(--error-container)",
-        border: "var(--outline-variant)",
-        input: "var(--surface-container-high)",
-        ring: "var(--primary)",
-        foreground: "var(--on-surface)",
-        muted: {
-          DEFAULT: "var(--surface-container)",
-          foreground: "var(--on-surface-variant)",
-        },
-        accent: {
-          DEFAULT: "var(--tertiary)",
-          foreground: "var(--on-tertiary)",
-        },
-        popover: {
-          DEFAULT: "var(--surface-container-lowest)",
-          foreground: "var(--on-surface)",
-        },
-        card: {
-          DEFAULT: "var(--surface-container-lowest)",
-          foreground: "var(--on-surface)",
-        },
-        primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--on-primary)",
-        },
-        secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--on-secondary)",
-        },
-        destructive: {
-          DEFAULT: "var(--error)",
-          foreground: "var(--on-error)",
-        },
       },
       borderRadius: {
-        DEFAULT: "0.125rem",
-        lg: "0.25rem",
-        xl: "0.5rem",
-        full: "0.75rem",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         headline: ["var(--font-headline)", ...fontFamily.sans],
