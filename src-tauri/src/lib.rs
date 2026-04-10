@@ -10,6 +10,10 @@ pub use presentation::commands;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            infrastructure::adb::tracker::start_device_tracker(app.handle().clone());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             presentation::commands::list_devices,
             presentation::commands::list_packages,
