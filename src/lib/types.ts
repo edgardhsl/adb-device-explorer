@@ -71,6 +71,7 @@ export interface AppConfig {
   openssl_dir: string;
   openssl_lib_dir: string;
   openssl_include_dir: string;
+  preferred_locale: string;
   config_file_path: string;
 }
 

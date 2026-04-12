@@ -10,6 +10,7 @@ import { listDevices, listPackages, getDeviceOverview, listDatabases, listTables
 import type { AppConfig, SortInfo, FilterInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useI18n, I18nProvider } from "@/lib/I18nContext";
+import type { Locale } from "@/lib/i18n";
 import { OVERVIEW_USAGE_HISTORY, type UsageHistoryPoint, type WorkspaceView } from "@/lib/workspace-navigation";
 import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { OverviewSection } from "@/components/workspace/overview-section";
@@ -35,6 +36,11 @@ function AppContent() {
   };
 
   const { t, locale, setLocale } = useI18n();
+  const normalizeLocale = (value: string): Locale => {
+    if (value === "pt-BR" || value === "en" || value === "es") return value;
+    if (value === "en-US") return "en";
+    return "en";
+  };
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
@@ -78,8 +84,12 @@ function AppContent() {
   useEffect(() => {
     if (appConfigData) {
       setAppConfig(appConfigData);
+      const configLocale = normalizeLocale(appConfigData.preferred_locale);
+      if (locale !== configLocale) {
+        setLocale(configLocale);
+      }
     }
-  }, [appConfigData]);
+  }, [appConfigData, locale, setLocale]);
 
   useEffect(() => {
     if (appConfigError) {
@@ -575,7 +585,20 @@ function AppContent() {
             connectedLabel={t.app.connected}
             disconnectedLabel={t.app.disconnected}
             locale={locale}
-            onLocaleChange={setLocale}
+            onLocaleChange={(nextLocale) => {
+              setLocale(nextLocale);
+              if (!appConfig) return;
+              void saveAppConfig(
+                appConfig.openssl_dir,
+                appConfig.openssl_lib_dir,
+                appConfig.openssl_include_dir,
+                nextLocale
+              )
+                .then((nextConfig) => setAppConfig(nextConfig))
+                .catch(() => {
+                  toast.error(t.settings.saveFailed);
+                });
+            }}
             onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
           />
 
@@ -675,7 +698,7 @@ function AppContent() {
                 saving={savingAppConfig}
                 onSave={({ opensslDir, opensslLibDir, opensslIncludeDir }) => {
                   setSavingAppConfig(true);
-                  void saveAppConfig(opensslDir, opensslLibDir, opensslIncludeDir)
+                  void saveAppConfig(opensslDir, opensslLibDir, opensslIncludeDir, locale)
                     .then((nextConfig) => {
                       setAppConfig(nextConfig);
                       toast.success(t.settings.saved);

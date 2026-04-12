@@ -2,3 +2,4 @@
 openssl_dir=C:\OpenSSL-Win64
 openssl_lib_dir=C:\OpenSSL-Win64\lib
 openssl_include_dir=C:\OpenSSL-Win64\include
+preferred_locale=en

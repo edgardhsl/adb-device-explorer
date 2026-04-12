@@ -79,5 +79,6 @@ pub struct AppConfig {
     pub openssl_dir: String,
     pub openssl_lib_dir: String,
     pub openssl_include_dir: String,
+    pub preferred_locale: String,
     pub config_file_path: String,
 }

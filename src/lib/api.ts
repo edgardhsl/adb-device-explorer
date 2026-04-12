@@ -112,11 +112,13 @@ export async function getAppConfig(): Promise<AppConfig> {
 export async function saveAppConfig(
   opensslDir: string,
   opensslLibDir: string,
-  opensslIncludeDir: string
+  opensslIncludeDir: string,
+  preferredLocale?: string
 ): Promise<AppConfig> {
   return invoke('save_app_config', {
     opensslDir,
     opensslLibDir,
     opensslIncludeDir,
+    preferredLocale,
   });
 }

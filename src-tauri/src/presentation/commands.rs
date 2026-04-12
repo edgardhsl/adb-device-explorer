@@ -214,6 +214,10 @@ pub async fn get_app_config(app: AppHandle) -> Result<crate::domain::entities::A
         openssl_dir: parse_ini_value(&content, "openssl_dir"),
         openssl_lib_dir: parse_ini_value(&content, "openssl_lib_dir"),
         openssl_include_dir: parse_ini_value(&content, "openssl_include_dir"),
+        preferred_locale: {
+            let locale = parse_ini_value(&content, "preferred_locale");
+            if locale.is_empty() { "en".to_string() } else { locale }
+        },
         config_file_path: config_path.to_string_lossy().to_string(),
     };
 
@@ -228,6 +232,7 @@ pub async fn save_app_config(
     openssl_dir: String,
     openssl_lib_dir: String,
     openssl_include_dir: String,
+    preferred_locale: Option<String>,
 ) -> Result<crate::domain::entities::AppConfig, String> {
     let config_path = app_config_file_path(&app)?;
 
@@ -240,12 +245,22 @@ pub async fn save_app_config(
         openssl_dir: openssl_dir.trim().to_string(),
         openssl_lib_dir: openssl_lib_dir.trim().to_string(),
         openssl_include_dir: openssl_include_dir.trim().to_string(),
+        preferred_locale: {
+            let locale = preferred_locale
+                .unwrap_or_else(|| "en".to_string())
+                .trim()
+                .to_string();
+            if locale.is_empty() { "en".to_string() } else { locale }
+        },
         config_file_path: config_path.to_string_lossy().to_string(),
     };
 
     let ini_content = format!(
-        "# ADB Fly configuration\nopenssl_dir={}\nopenssl_lib_dir={}\nopenssl_include_dir={}\n",
-        normalized.openssl_dir, normalized.openssl_lib_dir, normalized.openssl_include_dir
+        "# ADB Fly configuration\nopenssl_dir={}\nopenssl_lib_dir={}\nopenssl_include_dir={}\npreferred_locale={}\n",
+        normalized.openssl_dir,
+        normalized.openssl_lib_dir,
+        normalized.openssl_include_dir,
+        normalized.preferred_locale
     );
 
     fs::write(&config_path, ini_content)
