@@ -20,6 +20,7 @@ export function useWorkspaceState({
 }: UseWorkspaceStateParams) {
   return useMemo(() => {
     const isDatabaseView = workspaceView === "databases";
+    const isSettingsView = workspaceView === "settings";
     const showOverview = workspaceView === "overview";
     const hasAnyDevice = devicesCount > 0;
     const hasSelectedDevice = !!currentDevice;
@@ -37,10 +38,13 @@ export function useWorkspaceState({
 
     const workspaceDescription = showOverview
       ? t.main.overviewDescription
-      : t.main.databasesDescription;
+      : isDatabaseView
+        ? t.main.databasesDescription
+        : t.main.settingsDescription;
 
     return {
       isDatabaseView,
+      isSettingsView,
       showOverview,
       hasAnyDevice,
       hasSelectedDevice,

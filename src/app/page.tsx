@@ -6,8 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import { type ChartConfig } from "@/components/ui/chart";
-import { listDevices, listPackages, getDeviceOverview, listDatabases, listTables, getTableData, getTableSchema, executeSql } from "@/lib/api";
-import type { SortInfo, FilterInfo } from "@/lib/types";
+import { listDevices, listPackages, getDeviceOverview, listDatabases, listTables, getTableData, getTableSchema, executeSql, getAppConfig, saveAppConfig } from "@/lib/api";
+import type { AppConfig, SortInfo, FilterInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useI18n, I18nProvider } from "@/lib/I18nContext";
 import { OVERVIEW_USAGE_HISTORY, type UsageHistoryPoint, type WorkspaceView } from "@/lib/workspace-navigation";
@@ -16,6 +16,7 @@ import { OverviewSection } from "@/components/workspace/overview-section";
 import { OverviewBackdrop } from "@/components/workspace/overview-backdrop";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { DatabaseWorkspace } from "@/components/workspace/database-workspace";
+import { SettingsWorkspace } from "@/components/workspace/settings-workspace";
 import { useWorkspaceState } from "@/hooks/use-workspace-state";
 
 const queryClient = new QueryClient({
@@ -55,6 +56,8 @@ function AppContent() {
   const [savingPendingRows, setSavingPendingRows] = useState(false);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("overview");
   const [liveUsageHistory, setLiveUsageHistory] = useState<UsageHistoryPoint[]>([]);
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
+  const [savingAppConfig, setSavingAppConfig] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -64,6 +67,25 @@ function AppContent() {
     queryKey: ["devices"],
     queryFn: listDevices,
   });
+
+  const { data: appConfigData = null, refetch: refetchAppConfig, isError: appConfigError } = useQuery({
+    queryKey: ["appConfig"],
+    queryFn: getAppConfig,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (appConfigData) {
+      setAppConfig(appConfigData);
+    }
+  }, [appConfigData]);
+
+  useEffect(() => {
+    if (appConfigError) {
+      toast.error(t.settings.loadFailed);
+    }
+  }, [appConfigError, t.settings.loadFailed]);
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;
@@ -475,6 +497,7 @@ function AppContent() {
 
   const {
     isDatabaseView,
+    isSettingsView,
     showOverview,
     hasAnyDevice,
     hasSelectedDevice,
@@ -641,6 +664,30 @@ function AppContent() {
                 onPageSizeChange={(value) => { setPageSize(value); setPage(1); }}
                 onPrevPage={() => setPage((p) => Math.max(1, p - 1))}
                 onNextPage={() => setPage((p) => p + 1)}
+              />
+            )}
+
+            {isSettingsView && (
+              <SettingsWorkspace
+                theme={theme}
+                t={t}
+                config={appConfig}
+                saving={savingAppConfig}
+                onSave={({ opensslDir, opensslLibDir, opensslIncludeDir }) => {
+                  setSavingAppConfig(true);
+                  void saveAppConfig(opensslDir, opensslLibDir, opensslIncludeDir)
+                    .then((nextConfig) => {
+                      setAppConfig(nextConfig);
+                      toast.success(t.settings.saved);
+                      void refetchAppConfig();
+                    })
+                    .catch(() => {
+                      toast.error(t.settings.saveFailed);
+                    })
+                    .finally(() => {
+                      setSavingAppConfig(false);
+                    });
+                }}
               />
             )}
 

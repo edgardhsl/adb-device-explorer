@@ -8,7 +8,8 @@ import type {
   SqlResult,
   SortInfo,
   FilterInfo,
-  DeviceOverview
+  DeviceOverview,
+  AppConfig
 } from './types';
 
 export async function listDevices(): Promise<Device[]> {
@@ -101,5 +102,21 @@ export async function syncChanges(
     deviceId,
     packageName,
     dbName,
+  });
+}
+
+export async function getAppConfig(): Promise<AppConfig> {
+  return invoke('get_app_config');
+}
+
+export async function saveAppConfig(
+  opensslDir: string,
+  opensslLibDir: string,
+  opensslIncludeDir: string
+): Promise<AppConfig> {
+  return invoke('save_app_config', {
+    opensslDir,
+    opensslLibDir,
+    opensslIncludeDir,
   });
 }

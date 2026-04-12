@@ -1,8 +1,8 @@
-import { Database, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
+import { Cog, Database, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { TranslationKeys } from "@/lib/i18n";
 
-export type WorkspaceView = "overview" | "databases";
+export type WorkspaceView = "overview" | "databases" | "settings";
 
 type NavigationItemBase = {
   id: string;
@@ -79,6 +79,16 @@ export function buildNavigationGroups(
           enabled: true,
           visible: flags.canOpenDatabases,
         },
+        {
+          kind: "view",
+          id: "settings",
+          icon: Cog,
+          label: t.navigation.settings,
+          view: "settings",
+          helper: t.navigation.settingsHelper,
+          enabled: true,
+          visible: true,
+        },
       ],
     },
     {
@@ -122,6 +132,10 @@ export function buildNavigationGroups(
 export function buildBreadcrumbs(t: TranslationKeys, workspaceView: WorkspaceView): string[] {
   if (workspaceView === "databases") {
     return [t.breadcrumbs.workspace, t.breadcrumbs.databases];
+  }
+
+  if (workspaceView === "settings") {
+    return [t.breadcrumbs.workspace, t.breadcrumbs.settings];
   }
 
   return [t.breadcrumbs.workspace, t.breadcrumbs.overview];

@@ -1,7 +1,10 @@
 use crate::application::use_cases::{DatabaseUseCases, DeviceUseCases};
 use crate::domain::entities::{FilterInfo, SortInfo};
+use std::env;
+use std::fs;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 pub struct AppState {
     pub device_use_cases: DeviceUseCases,
@@ -162,4 +165,93 @@ pub async fn sync_changes(
     _db_name: String,
 ) -> Result<(), String> {
     Err("Sync not implemented in this version. Changes are temporary.".to_string())
+}
+
+fn app_config_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("Failed to resolve app config dir: {}", e))?;
+    Ok(config_dir.join("adbfly.ini"))
+}
+
+fn parse_ini_value(content: &str, key: &str) -> String {
+    content
+        .lines()
+        .find_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.starts_with('#') || trimmed.starts_with(';') || trimmed.is_empty() {
+                return None;
+            }
+            let (line_key, line_value) = trimmed.split_once('=')?;
+            if line_key.trim() == key {
+                Some(line_value.trim().to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_default()
+}
+
+fn apply_openssl_env(config: &crate::domain::entities::AppConfig) {
+    if !config.openssl_dir.is_empty() {
+        env::set_var("OPENSSL_DIR", &config.openssl_dir);
+    }
+    if !config.openssl_lib_dir.is_empty() {
+        env::set_var("OPENSSL_LIB_DIR", &config.openssl_lib_dir);
+    }
+    if !config.openssl_include_dir.is_empty() {
+        env::set_var("OPENSSL_INCLUDE_DIR", &config.openssl_include_dir);
+    }
+}
+
+#[tauri::command]
+pub async fn get_app_config(app: AppHandle) -> Result<crate::domain::entities::AppConfig, String> {
+    let config_path = app_config_file_path(&app)?;
+    let content = fs::read_to_string(&config_path).unwrap_or_default();
+
+    let config = crate::domain::entities::AppConfig {
+        openssl_dir: parse_ini_value(&content, "openssl_dir"),
+        openssl_lib_dir: parse_ini_value(&content, "openssl_lib_dir"),
+        openssl_include_dir: parse_ini_value(&content, "openssl_include_dir"),
+        config_file_path: config_path.to_string_lossy().to_string(),
+    };
+
+    apply_openssl_env(&config);
+
+    Ok(config)
+}
+
+#[tauri::command]
+pub async fn save_app_config(
+    app: AppHandle,
+    openssl_dir: String,
+    openssl_lib_dir: String,
+    openssl_include_dir: String,
+) -> Result<crate::domain::entities::AppConfig, String> {
+    let config_path = app_config_file_path(&app)?;
+
+    if let Some(parent) = config_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    }
+
+    let normalized = crate::domain::entities::AppConfig {
+        openssl_dir: openssl_dir.trim().to_string(),
+        openssl_lib_dir: openssl_lib_dir.trim().to_string(),
+        openssl_include_dir: openssl_include_dir.trim().to_string(),
+        config_file_path: config_path.to_string_lossy().to_string(),
+    };
+
+    let ini_content = format!(
+        "# ADB Fly configuration\nopenssl_dir={}\nopenssl_lib_dir={}\nopenssl_include_dir={}\n",
+        normalized.openssl_dir, normalized.openssl_lib_dir, normalized.openssl_include_dir
+    );
+
+    fs::write(&config_path, ini_content)
+        .map_err(|e| format!("Failed to save config file: {}", e))?;
+
+    apply_openssl_env(&normalized);
+
+    Ok(normalized)
 }
