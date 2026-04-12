@@ -51,14 +51,22 @@ function run() {
   if (!env.OPENSSL_DIR && values.openssl_dir) env.OPENSSL_DIR = values.openssl_dir;
   if (!env.OPENSSL_LIB_DIR && values.openssl_lib_dir) env.OPENSSL_LIB_DIR = values.openssl_lib_dir;
   if (!env.OPENSSL_INCLUDE_DIR && values.openssl_include_dir) env.OPENSSL_INCLUDE_DIR = values.openssl_include_dir;
+  env.OPENSSL_NO_VENDOR = "1";
 
+  const shouldEnableSqlcipher = Boolean(env.OPENSSL_DIR || (env.OPENSSL_LIB_DIR && env.OPENSSL_INCLUDE_DIR));
   if (configFile) {
     console.log(`Loaded OpenSSL config from: ${configFile}`);
   }
-  console.log("Starting Tauri with SQLCipher (Rust OpenSSL vendored path).");
-  console.log("Note: first build requires C toolchain, perl and make.");
+  if (shouldEnableSqlcipher) {
+    console.log("Starting Tauri with SQLCipher enabled (OpenSSL system/installed path).");
+  } else {
+    console.log("OpenSSL not configured. Starting with SQLite fallback (SQLCipher disabled).");
+  }
 
-  const fullArgs = ["tauri", ...tauriArgs, "--features", "sqlcipher"];
+  const fullArgs = ["tauri", ...tauriArgs];
+  if (shouldEnableSqlcipher) {
+    fullArgs.push("--features", "sqlcipher");
+  }
 
   let child;
   if (process.platform === "win32") {

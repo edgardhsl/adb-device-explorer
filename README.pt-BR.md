@@ -77,7 +77,7 @@ O executável estará em `src-tauri/target/release/`
 
 ### SQLCipher com OpenSSL (crate Rust)
 
-O projeto usa o caminho do crate `openssl` com build vendorizado para SQLCipher.
+O projeto usa o crate `openssl` sem build vendorizado do OpenSSL.
 
 Para rodar:
 
@@ -85,12 +85,8 @@ Para rodar:
 npm run tauri:dev
 ```
 
-Dependências de build (primeira compilação):
-- C toolchain
-- perl
-- make
-
-Se quiser, ainda pode definir `OPENSSL_*` via app settings (`adbfly.ini`), mas o fluxo padrão usa OpenSSL vendorizado.
+Se OpenSSL estiver configurado (`OPENSSL_DIR` ou `OPENSSL_LIB_DIR` + `OPENSSL_INCLUDE_DIR`), o SQLCipher é habilitado.
+Se não estiver, o app inicia com fallback SQLite.
 
 ---
 
