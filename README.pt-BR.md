@@ -75,11 +75,9 @@ npm run tauri:build
 
 O executável estará em `src-tauri/target/release/`
 
-### SQLite builtin + SQLCipher opcional
+### SQLCipher com OpenSSL (crate Rust)
 
-O app sempre inicia com SQLite builtin (sem OpenSSL e sem Perl).
-
-Se `OPENSSL_*` estiver configurado, o runner habilita SQLCipher automaticamente.
+O projeto usa o caminho do crate `openssl` com build vendorizado para SQLCipher.
 
 Para rodar:
 
@@ -87,10 +85,12 @@ Para rodar:
 npm run tauri:dev
 ```
 
-O runner do Tauri carrega automaticamente `OPENSSL_*` do arquivo:
-- `%APPDATA%\com.adbfly.app\adbfly.ini`
+Dependências de build (primeira compilação):
+- C toolchain
+- perl
+- make
 
-No primeiro bootstrap (antes da UI abrir), você pode criar `adbfly.ini` na raiz do projeto usando `adbfly.ini.example`.
+Se quiser, ainda pode definir `OPENSSL_*` via app settings (`adbfly.ini`), mas o fluxo padrão usa OpenSSL vendorizado.
 
 ---
 

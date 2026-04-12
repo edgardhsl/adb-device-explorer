@@ -52,23 +52,15 @@ function run() {
   if (!env.OPENSSL_LIB_DIR && values.openssl_lib_dir) env.OPENSSL_LIB_DIR = values.openssl_lib_dir;
   if (!env.OPENSSL_INCLUDE_DIR && values.openssl_include_dir) env.OPENSSL_INCLUDE_DIR = values.openssl_include_dir;
 
-  const shouldEnableSqlcipher = Boolean(env.OPENSSL_DIR);
-  if (shouldEnableSqlcipher) {
-    if (configFile) {
-      console.log(`Using OpenSSL config from: ${configFile}`);
-    } else {
-      console.log("Using OpenSSL config from environment variables.");
-    }
-  } else {
-    console.log("OPENSSL_DIR not configured. Starting without SQLCipher support (SQLite fallback).");
-    console.log("To enable SQLCipher, configure OpenSSL in app settings or adbfly.ini.");
+  if (configFile) {
+    console.log(`Loaded OpenSSL config from: ${configFile}`);
   }
+  console.log("Starting Tauri with SQLCipher (Rust OpenSSL vendored path).");
+  console.log("Note: first build requires C toolchain, perl and make.");
 
   const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
   const fullArgs = ["tauri", ...tauriArgs];
-  if (shouldEnableSqlcipher) {
-    fullArgs.push("--features", "sqlcipher");
-  }
+  fullArgs.push("--features", "sqlcipher");
 
   const child = spawn(npxCmd, fullArgs, {
     stdio: "inherit",
