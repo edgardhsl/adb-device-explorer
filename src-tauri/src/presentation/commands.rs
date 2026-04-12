@@ -1,6 +1,7 @@
 use crate::application::use_cases::{DatabaseUseCases, DeviceUseCases};
 use crate::domain::entities::{FilterInfo, SortInfo};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use tauri::State;
 
 pub struct AppState {
     pub device_use_cases: DeviceUseCases,
@@ -16,82 +17,101 @@ impl AppState {
     }
 }
 
-lazy_static::lazy_static! {
-    static ref APP_STATE: Mutex<AppState> = Mutex::new(AppState::new());
-}
+pub type SharedAppState = Arc<Mutex<AppState>>;
 
-#[tauri::command]
-pub async fn list_devices() -> Result<Vec<crate::domain::entities::Device>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state.device_use_cases.list_devices()
+async fn run_with_state<T, F>(state: State<'_, SharedAppState>, task: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce(&AppState) -> Result<T, String> + Send + 'static,
+{
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let guard = state.lock().map_err(|e| e.to_string())?;
+        task(&guard)
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn list_devices(
+    state: State<'_, SharedAppState>,
+) -> Result<Vec<crate::domain::entities::Device>, String> {
+    run_with_state(state, |app_state| app_state.device_use_cases.list_devices()).await
 }
 
 #[tauri::command]
 pub async fn list_packages(
+    state: State<'_, SharedAppState>,
     device_id: String,
 ) -> Result<Vec<crate::domain::entities::Package>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state.device_use_cases.list_packages(&device_id)
+    run_with_state(state, move |app_state| {
+        app_state.device_use_cases.list_packages(&device_id)
     })
     .await
-    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn get_device_overview(
+    state: State<'_, SharedAppState>,
+    device_id: String,
+) -> Result<crate::domain::entities::DeviceOverview, String> {
+    run_with_state(state, move |app_state| {
+        app_state.device_use_cases.get_device_overview(&device_id)
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn list_databases(
+    state: State<'_, SharedAppState>,
     device_id: String,
     package_name: String,
 ) -> Result<Vec<crate::domain::entities::DatabaseInfo>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state
+    run_with_state(state, move |app_state| {
+        app_state
             .database_use_cases
             .list_databases(&device_id, &package_name)
     })
     .await
-    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 pub async fn list_tables(
+    state: State<'_, SharedAppState>,
     device_id: String,
     package_name: String,
     db_name: String,
+    db_key: Option<String>,
 ) -> Result<Vec<String>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state
+    run_with_state(state, move |app_state| {
+        app_state
             .database_use_cases
-            .list_tables(&device_id, &package_name, &db_name)
+            .list_tables(&device_id, &package_name, &db_name, db_key.as_deref())
     })
     .await
-    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 pub async fn get_table_schema(
+    state: State<'_, SharedAppState>,
     device_id: String,
     package_name: String,
     db_name: String,
     table: String,
+    db_key: Option<String>,
 ) -> Result<crate::domain::entities::TableSchema, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state
+    run_with_state(state, move |app_state| {
+        app_state
             .database_use_cases
-            .get_table_schema(&device_id, &package_name, &db_name, &table)
+            .get_table_schema(&device_id, &package_name, &db_name, &table, db_key.as_deref())
     })
     .await
-    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 pub async fn get_table_data(
+    state: State<'_, SharedAppState>,
     device_id: String,
     package_name: String,
     db_name: String,
@@ -100,10 +120,10 @@ pub async fn get_table_data(
     page_size: u32,
     sort: Option<SortInfo>,
     filters: Option<Vec<FilterInfo>>,
+    db_key: Option<String>,
 ) -> Result<crate::domain::entities::TableData, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state.database_use_cases.get_table_data(
+    run_with_state(state, move |app_state| {
+        app_state.database_use_cases.get_table_data(
             &device_id,
             &package_name,
             &db_name,
@@ -112,27 +132,27 @@ pub async fn get_table_data(
             page_size,
             sort,
             filters,
+            db_key.as_deref(),
         )
     })
     .await
-    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 pub async fn execute_sql(
+    state: State<'_, SharedAppState>,
     device_id: String,
     package_name: String,
     db_name: String,
     sql: String,
+    db_key: Option<String>,
 ) -> Result<crate::domain::entities::SqlResult, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = APP_STATE.lock().map_err(|e| e.to_string())?;
-        state
+    run_with_state(state, move |app_state| {
+        app_state
             .database_use_cases
-            .execute_sql(&device_id, &package_name, &db_name, &sql)
+            .execute_sql(&device_id, &package_name, &db_name, &sql, db_key.as_deref())
     })
     .await
-    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

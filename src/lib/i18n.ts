@@ -24,6 +24,8 @@ export const translations = {
       schemaExplorer: "Explorador de esquema",
       schemaExplorerDescription: "Dispositivos, pacotes, bancos e tabelas.",
       schemaExplorerLocked: "Conecte e selecione um dispositivo para liberar o Explorador de esquema.",
+      sqlCipherKey: "Chave SQLCipher",
+      sqlCipherKeyPlaceholder: "Digite a chave do banco",
     },
     main: {
       noDevice: "Nenhum dispositivo conectado",
@@ -89,6 +91,7 @@ export const translations = {
       connectDevice: "Conectar dispositivo",
       selectDevice: "Selecionar dispositivo",
       selectApp: "Selecionar app",
+      unlock: "Desbloquear",
       locked: "Bloqueado",
     },
     navigation: {
@@ -139,6 +142,8 @@ export const translations = {
       schemaExplorer: "Schema Explorer",
       schemaExplorerDescription: "Devices, packages, databases and tables.",
       schemaExplorerLocked: "Connect and select a device to unlock Schema Explorer.",
+      sqlCipherKey: "SQLCipher key",
+      sqlCipherKeyPlaceholder: "Enter database key",
     },
     main: {
       noDevice: "No device connected",
@@ -204,6 +209,7 @@ export const translations = {
       connectDevice: "Connect device",
       selectDevice: "Select device",
       selectApp: "Select app",
+      unlock: "Unlock",
       locked: "Locked",
     },
     navigation: {
@@ -254,6 +260,8 @@ export const translations = {
       schemaExplorer: "Explorador de esquema",
       schemaExplorerDescription: "Dispositivos, paquetes, bases de datos y tablas.",
       schemaExplorerLocked: "Conecta y selecciona un dispositivo para desbloquear el Explorador de esquema.",
+      sqlCipherKey: "Clave SQLCipher",
+      sqlCipherKeyPlaceholder: "Ingresa la clave de la base",
     },
     main: {
       noDevice: "Ningún dispositivo conectado",
@@ -319,6 +327,7 @@ export const translations = {
       connectDevice: "Conectar dispositivo",
       selectDevice: "Seleccionar dispositivo",
       selectApp: "Seleccionar app",
+      unlock: "Desbloquear",
       locked: "Bloqueado",
     },
     navigation: {

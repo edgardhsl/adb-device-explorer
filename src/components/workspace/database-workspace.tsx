@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, Database, Layers, PanelLeftClose, PanelLeftOpen, Plus, RefreshCw, Search, TableProperties, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, ChevronRight, Database, KeyRound, Layers, PanelLeftClose, PanelLeftOpen, Plus, RefreshCw, Search, TableProperties, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,8 @@ type DatabaseWorkspaceProps = {
   tablesError: boolean;
   fetchingDbs: boolean;
   selectedDb: string | null;
+  databaseKey: string;
+  onApplyDatabaseKey: (key: string) => void;
   expandedDbs: Set<string>;
   setExpandedDbs: Dispatch<SetStateAction<Set<string>>>;
   onSelectDb: (db: string) => void;
@@ -90,6 +92,8 @@ export function DatabaseWorkspace({
   tablesError,
   fetchingDbs,
   selectedDb,
+  databaseKey,
+  onApplyDatabaseKey,
   expandedDbs,
   setExpandedDbs,
   onSelectDb,
@@ -136,6 +140,11 @@ export function DatabaseWorkspace({
   const [isSchemaSidebarCollapsed, setIsSchemaSidebarCollapsed] = useState(false);
   const [confirmDeleteRowIndex, setConfirmDeleteRowIndex] = useState<number | null>(null);
   const [confirmDiscardPending, setConfirmDiscardPending] = useState(false);
+  const [dbKeyInput, setDbKeyInput] = useState(databaseKey);
+
+  useEffect(() => {
+    setDbKeyInput(databaseKey);
+  }, [databaseKey, selectedDb]);
 
   if (!canOpenDatabases) {
     return (
@@ -191,6 +200,32 @@ export function DatabaseWorkspace({
                   <div className={cn("rounded-xl border px-2 py-2 text-[11px] font-mono", theme === "dark" ? "border-white/10 text-zinc-300" : "border-slate-200 text-slate-700")}>
                     {selectedPackage}
                   </div>
+                  {selectedDb && (
+                    <div className={cn("space-y-2 rounded-xl border p-2", theme === "dark" ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50")}>
+                      <p className={cn("text-[10px] font-semibold uppercase tracking-[0.08em]", theme === "dark" ? "text-zinc-400" : "text-slate-600")}>
+                        {t.sidebar.sqlCipherKey}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="password"
+                          value={dbKeyInput}
+                          onChange={(event) => setDbKeyInput(event.target.value)}
+                          placeholder={t.sidebar.sqlCipherKeyPlaceholder}
+                          className={cn("h-8 text-[11px]", theme === "dark" ? "border-[#3a3a3a] bg-[#232323] text-zinc-100 placeholder:text-zinc-500" : "border-slate-300 bg-white text-slate-700 placeholder:text-slate-400")}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => onApplyDatabaseKey(dbKeyInput)}
+                          className={cn("h-8 px-2 text-[11px]", theme === "dark" ? "bg-white/10 text-zinc-100 hover:bg-white/20" : "bg-white text-slate-700 hover:bg-slate-100")}
+                        >
+                          <KeyRound className="mr-1 h-3.5 w-3.5" />
+                          {t.actions.unlock}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {fetchingDbs && (
                     <p className={cn("text-[11px]", theme === "dark" ? "text-zinc-400" : "text-slate-500")}>{t.table.loading}</p>
                   )}

@@ -27,21 +27,28 @@ export async function listDatabases(deviceId: string, packageName: string): Prom
   return invoke('list_databases', { deviceId, packageName });
 }
 
-export async function listTables(deviceId: string, packageName: string, dbName: string): Promise<string[]> {
-  return invoke('list_tables', { deviceId, packageName, dbName });
+export async function listTables(
+  deviceId: string,
+  packageName: string,
+  dbName: string,
+  dbKey?: string
+): Promise<string[]> {
+  return invoke('list_tables', { deviceId, packageName, dbName, dbKey });
 }
 
 export async function getTableSchema(
   deviceId: string, 
   packageName: string, 
   dbName: string, 
-  table: string
+  table: string,
+  dbKey?: string
 ): Promise<TableSchema> {
   return invoke('get_table_schema', {
     deviceId,
     packageName,
     dbName,
     table,
+    dbKey,
   });
 }
 
@@ -53,7 +60,8 @@ export async function getTableData(
   page: number,
   pageSize: number,
   sort?: SortInfo,
-  filters?: FilterInfo[]
+  filters?: FilterInfo[],
+  dbKey?: string
 ): Promise<TableData> {
   return invoke('get_table_data', {
     deviceId,
@@ -64,6 +72,7 @@ export async function getTableData(
     pageSize,
     sort,
     filters,
+    dbKey,
   });
 }
 
@@ -71,13 +80,15 @@ export async function executeSql(
   deviceId: string,
   packageName: string,
   dbName: string,
-  sql: string
+  sql: string,
+  dbKey?: string
 ): Promise<SqlResult> {
   return invoke('execute_sql', {
     deviceId,
     packageName,
     dbName,
     sql,
+    dbKey,
   });
 }
 

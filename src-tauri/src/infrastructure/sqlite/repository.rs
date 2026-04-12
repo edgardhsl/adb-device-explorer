@@ -56,6 +56,42 @@ impl SqliteRepository {
         Ok((temp_dir, local_db))
     }
 
+    fn open_connection(
+        &self,
+        local_path: &std::path::Path,
+        db_key: Option<&str>,
+    ) -> Result<rusqlite::Connection, String> {
+        let conn = rusqlite::Connection::open(local_path)
+            .map_err(|e| format!("Failed to open database: {}", e))?;
+
+        if let Some(raw_key) = db_key {
+            let trimmed_key = raw_key.trim();
+            if !trimmed_key.is_empty() {
+                let escaped_key = trimmed_key.replace('\'', "''");
+                conn.execute_batch(&format!("PRAGMA key = '{}';", escaped_key))
+                    .map_err(|e| format!("Failed to apply SQLCipher key: {}", e))?;
+            }
+        }
+
+        match conn.query_row("SELECT count(*) FROM sqlite_master", [], |row| row.get::<_, i64>(0))
+        {
+            Ok(_) => Ok(conn),
+            Err(error) => {
+                let error_text = error.to_string().to_lowercase();
+                if error_text.contains("file is not a database") {
+                    if db_key.is_some() {
+                        Err("Invalid SQLCipher key for this database.".to_string())
+                    } else {
+                        Err("This database appears to be encrypted. Provide a SQLCipher key."
+                            .to_string())
+                    }
+                } else {
+                    Err(format!("Failed to validate database connection: {}", error))
+                }
+            }
+        }
+    }
+
     pub fn list_databases(
         &self,
         device_id: &str,
@@ -98,11 +134,11 @@ impl SqliteRepository {
         device_id: &str,
         package_name: &str,
         db_name: &str,
+        db_key: Option<&str>,
     ) -> Result<Vec<String>, String> {
         let (_temp_dir, local_path) = self.pull_database(device_id, package_name, db_name)?;
 
-        let conn = rusqlite::Connection::open(&local_path)
-            .map_err(|e| format!("Failed to open database: {}", e))?;
+        let conn = self.open_connection(&local_path, db_key)?;
 
         let mut stmt = conn
             .prepare(
@@ -125,11 +161,11 @@ impl SqliteRepository {
         package_name: &str,
         db_name: &str,
         table: &str,
+        db_key: Option<&str>,
     ) -> Result<TableSchema, String> {
         let (_temp_dir, local_path) = self.pull_database(device_id, package_name, db_name)?;
 
-        let conn = rusqlite::Connection::open(&local_path)
-            .map_err(|e| format!("Failed to open database: {}", e))?;
+        let conn = self.open_connection(&local_path, db_key)?;
 
         let mut stmt = conn
             .prepare(&format!("PRAGMA table_info('{}')", table))
@@ -165,11 +201,11 @@ impl SqliteRepository {
         page_size: u32,
         sort: Option<SortInfo>,
         filters: Option<Vec<FilterInfo>>,
+        db_key: Option<&str>,
     ) -> Result<TableData, String> {
         let (_temp_dir, local_path) = self.pull_database(device_id, package_name, db_name)?;
 
-        let conn = rusqlite::Connection::open(&local_path)
-            .map_err(|e| format!("Failed to open database: {}", e))?;
+        let conn = self.open_connection(&local_path, db_key)?;
 
         let mut sql = format!("SELECT * FROM \"{}\"", table);
         let mut count_sql = format!("SELECT COUNT(*) FROM \"{}\"", table);
@@ -250,11 +286,11 @@ impl SqliteRepository {
         package_name: &str,
         db_name: &str,
         sql: &str,
+        db_key: Option<&str>,
     ) -> Result<SqlResult, String> {
         let (_temp_dir, local_path) = self.pull_database(device_id, package_name, db_name)?;
 
-        let conn = rusqlite::Connection::open(&local_path)
-            .map_err(|e| format!("Failed to open database: {}", e))?;
+        let conn = self.open_connection(&local_path, db_key)?;
 
         let is_select = sql.trim().to_uppercase().starts_with("SELECT");
 

@@ -38,6 +38,7 @@ function AppContent() {
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
+  const [databaseKeys, setDatabaseKeys] = useState<Record<string, string>>({});
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [packageSearch, setPackageSearch] = useState("");
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
@@ -94,6 +95,7 @@ function AppContent() {
     setSelectedDevice(null);
     setSelectedPackage(null);
     setSelectedDb(null);
+    setDatabaseKeys({});
     setSelectedTable(null);
     setWorkspaceView("overview");
     setIsAddingInlineRow(false);
@@ -156,27 +158,40 @@ function AppContent() {
   });
 
   const { data: tables = [], isError: tablesError } = useQuery({
-    queryKey: ["tables", selectedDevice, selectedPackage, selectedDb],
-    queryFn: () => selectedDevice && selectedPackage && selectedDb ? listTables(selectedDevice, selectedPackage, selectedDb) : Promise.resolve([]),
+    queryKey: ["tables", selectedDevice, selectedPackage, selectedDb, selectedDb ? databaseKeys[selectedDb] ?? "" : ""],
+    queryFn: () =>
+      selectedDevice && selectedPackage && selectedDb
+        ? listTables(selectedDevice, selectedPackage, selectedDb, databaseKeys[selectedDb])
+        : Promise.resolve([]),
     enabled: !!selectedDevice && !!selectedPackage && !!selectedDb,
     retry: false,
   });
 
   const { data: tableData, refetch: refetchTableData, isFetching: fetchingTable } = useQuery({
-    queryKey: ["tableData", selectedDevice, selectedPackage, selectedDb, selectedTable, page, pageSize, sortInfo, filters],
+    queryKey: ["tableData", selectedDevice, selectedPackage, selectedDb, selectedTable, page, pageSize, sortInfo, filters, selectedDb ? databaseKeys[selectedDb] ?? "" : ""],
     queryFn: () => {
       if (!selectedDevice || !selectedPackage || !selectedDb || !selectedTable) return Promise.resolve(null);
-      return getTableData(selectedDevice, selectedPackage, selectedDb, selectedTable, page, pageSize, sortInfo || undefined, filters.length ? filters : undefined);
+      return getTableData(
+        selectedDevice,
+        selectedPackage,
+        selectedDb,
+        selectedTable,
+        page,
+        pageSize,
+        sortInfo || undefined,
+        filters.length ? filters : undefined,
+        databaseKeys[selectedDb]
+      );
     },
     enabled: !!selectedDevice && !!selectedPackage && !!selectedDb && !!selectedTable,
     placeholderData: (previousData) => previousData,
   });
 
   const { data: tableSchema } = useQuery({
-    queryKey: ["tableSchema", selectedDevice, selectedPackage, selectedDb, selectedTable],
+    queryKey: ["tableSchema", selectedDevice, selectedPackage, selectedDb, selectedTable, selectedDb ? databaseKeys[selectedDb] ?? "" : ""],
     queryFn: () => {
       if (!selectedDevice || !selectedPackage || !selectedDb || !selectedTable) return Promise.resolve(null);
-      return getTableSchema(selectedDevice, selectedPackage, selectedDb, selectedTable);
+      return getTableSchema(selectedDevice, selectedPackage, selectedDb, selectedTable, databaseKeys[selectedDb]);
     },
     enabled: !!selectedDevice && !!selectedPackage && !!selectedDb && !!selectedTable,
   });
@@ -295,7 +310,7 @@ function AppContent() {
       const sql = `UPDATE "${selectedTable}" SET ${assignments} WHERE "${pkColumn}" = ${pkWhere}`;
 
       try {
-        const result = await executeSql(selectedDevice, selectedPackage, selectedDb, sql);
+        const result = await executeSql(selectedDevice, selectedPackage, selectedDb, sql, databaseKeys[selectedDb]);
         if (!result.success) {
           throw new Error(result.message || "Falha ao executar UPDATE");
         }
@@ -333,7 +348,7 @@ function AppContent() {
     const values = cols.map(c => newRowData[c.name] === '' || newRowData[c.name] === undefined ? 'NULL' : `'${newRowData[c.name].replace(/'/g, "''")}'`).join(", ");
     const sql = `INSERT INTO "${selectedTable}" (${cols.map(c => `"${c.name}"`).join(", ")}) VALUES (${values})`;
     try {
-      await executeSql(selectedDevice, selectedPackage, selectedDb, sql);
+      await executeSql(selectedDevice, selectedPackage, selectedDb, sql, databaseKeys[selectedDb]);
       setIsAddingInlineRow(false);
       setNewRowData({});
       toast.success("Linha adicionada", {
@@ -361,7 +376,7 @@ function AppContent() {
     const pkValue = rowData[pk];
     const sql = `DELETE FROM "${selectedTable}" WHERE "${pk}" = ${typeof pkValue === 'number' ? pkValue : `'${pkValue}'`}`;
     try {
-      await executeSql(selectedDevice, selectedPackage, selectedDb, sql);
+      await executeSql(selectedDevice, selectedPackage, selectedDb, sql, databaseKeys[selectedDb]);
       const rowKey = getRowKey(rowData, rowIndex);
       setPendingRowEdits((prev) => {
         const next = { ...prev };
@@ -398,6 +413,7 @@ function AppContent() {
     setSelectedDevice(deviceId);
     setSelectedPackage(null);
     setSelectedDb(null);
+    setDatabaseKeys({});
     setSelectedTable(null);
     setPackageSearch("");
     setWorkspaceView("overview");
@@ -410,6 +426,7 @@ function AppContent() {
   const selectPackage = (pkg: string) => {
     setSelectedPackage(pkg);
     setSelectedDb(null);
+    setDatabaseKeys({});
     setSelectedTable(null);
     setWorkspaceView("overview");
     setIsAddingInlineRow(false);
@@ -569,6 +586,11 @@ function AppContent() {
                 tablesError={tablesError}
                 fetchingDbs={fetchingDbs}
                 selectedDb={selectedDb}
+                databaseKey={selectedDb ? databaseKeys[selectedDb] ?? "" : ""}
+                onApplyDatabaseKey={(key) => {
+                  if (!selectedDb) return;
+                  setDatabaseKeys((prev) => ({ ...prev, [selectedDb]: key }));
+                }}
                 expandedDbs={expandedDbs}
                 setExpandedDbs={setExpandedDbs}
                 onSelectDb={selectDb}
