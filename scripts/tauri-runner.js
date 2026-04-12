@@ -62,13 +62,12 @@ function run() {
 
   let child;
   if (process.platform === "win32") {
-    const quote = (value) => `"${String(value).replace(/"/g, '\\"')}"`;
-    const command = ["npx", ...fullArgs].map(quote).join(" ");
-    child = spawn("cmd.exe", ["/d", "/s", "/c", command], {
+    const command = ["npx", ...fullArgs].join(" ");
+    child = spawn(command, [], {
       stdio: "inherit",
       env,
       cwd: process.cwd(),
-      windowsVerbatimArguments: true,
+      shell: true,
     });
   } else {
     child = spawn("npx", fullArgs, {
