@@ -568,6 +568,7 @@ function AppContent() {
           onSelectDevice={selectDevice}
           onSelectPackage={selectPackage}
           onRefreshDevices={() => refetchDevices()}
+          onOpenSettings={() => setWorkspaceView("settings")}
           loadingDevices={loadingDevices}
         />
 
