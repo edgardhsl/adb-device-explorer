@@ -67,9 +67,20 @@ impl SqliteRepository {
         if let Some(raw_key) = db_key {
             let trimmed_key = raw_key.trim();
             if !trimmed_key.is_empty() {
+                #[cfg(not(feature = "sqlcipher"))]
+                {
+                    return Err(
+                        "SQLCipher is not enabled in this build. Configure OpenSSL and start with SQLCipher support."
+                            .to_string(),
+                    );
+                }
+
+                #[cfg(feature = "sqlcipher")]
+                {
                 let escaped_key = trimmed_key.replace('\'', "''");
                 conn.execute_batch(&format!("PRAGMA key = '{}';", escaped_key))
                     .map_err(|e| format!("Failed to apply SQLCipher key: {}", e))?;
+                }
             }
         }
 
@@ -82,8 +93,16 @@ impl SqliteRepository {
                     if db_key.is_some() {
                         Err("Invalid SQLCipher key for this database.".to_string())
                     } else {
-                        Err("This database appears to be encrypted. Provide a SQLCipher key."
-                            .to_string())
+                        #[cfg(feature = "sqlcipher")]
+                        {
+                            Err("This database appears to be encrypted. Provide a SQLCipher key."
+                                .to_string())
+                        }
+                        #[cfg(not(feature = "sqlcipher"))]
+                        {
+                            Err("This database appears encrypted and SQLCipher is disabled in this build."
+                                .to_string())
+                        }
                     }
                 } else {
                     Err(format!("Failed to validate database connection: {}", error))

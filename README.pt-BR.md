@@ -75,11 +75,13 @@ npm run tauri:build
 
 O executável estará em `src-tauri/target/release/`
 
-### SQLCipher sem Perl (build local)
+### SQLite builtin + SQLCipher opcional
 
-O projeto usa SQLCipher via `rusqlite` sem OpenSSL vendorizado, então **não precisa de Perl** para compilar.
+O app sempre inicia com SQLite builtin (sem OpenSSL e sem Perl).
 
-No Windows, configure o OpenSSL no app (tela **Configurações**) e rode:
+Se `OPENSSL_*` estiver configurado, o runner habilita SQLCipher automaticamente.
+
+Para rodar:
 
 ```powershell
 npm run tauri:dev

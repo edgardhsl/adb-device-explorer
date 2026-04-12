@@ -52,25 +52,25 @@ function run() {
   if (!env.OPENSSL_LIB_DIR && values.openssl_lib_dir) env.OPENSSL_LIB_DIR = values.openssl_lib_dir;
   if (!env.OPENSSL_INCLUDE_DIR && values.openssl_include_dir) env.OPENSSL_INCLUDE_DIR = values.openssl_include_dir;
 
-  if (!env.OPENSSL_DIR) {
-    console.error("OpenSSL not configured. Missing OPENSSL_DIR.");
-    console.error("Set OPENSSL_* in app settings or create adbfly.ini in the project root.");
-    console.error("Example:");
-    console.error("  openssl_dir=C:\\OpenSSL-Win64");
-    console.error("  openssl_lib_dir=C:\\OpenSSL-Win64\\lib");
-    console.error("  openssl_include_dir=C:\\OpenSSL-Win64\\include");
-    console.error("Searched ini:", configFile ?? "(none)");
-    process.exit(1);
-  }
-
-  if (configFile) {
-    console.log(`Using OpenSSL config from: ${configFile}`);
+  const shouldEnableSqlcipher = Boolean(env.OPENSSL_DIR);
+  if (shouldEnableSqlcipher) {
+    if (configFile) {
+      console.log(`Using OpenSSL config from: ${configFile}`);
+    } else {
+      console.log("Using OpenSSL config from environment variables.");
+    }
   } else {
-    console.log("Using OpenSSL config from environment variables.");
+    console.log("OPENSSL_DIR not configured. Starting without SQLCipher support (SQLite fallback).");
+    console.log("To enable SQLCipher, configure OpenSSL in app settings or adbfly.ini.");
   }
 
   const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
-  const child = spawn(npxCmd, ["tauri", ...tauriArgs], {
+  const fullArgs = ["tauri", ...tauriArgs];
+  if (shouldEnableSqlcipher) {
+    fullArgs.push("--features", "sqlcipher");
+  }
+
+  const child = spawn(npxCmd, fullArgs, {
     stdio: "inherit",
     env,
     cwd: process.cwd(),
