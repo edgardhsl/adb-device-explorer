@@ -63,6 +63,7 @@ With a simple interface, you can explore device apps, view databases, and perfor
 
 ### Software
 - [ADB](https://developer.android.com/studio/command-line/adb) (Android SDK Platform Tools)
+- OpenSSL (only for local SQLCipher builds)
 - Windows 10/11 (other platforms not tested)
 
 ### Android Device
@@ -87,13 +88,27 @@ npm install
 
 # Run in development mode
 npm run dev
+npm run tauri:dev
 
 # Build for production
 npm run build
-npm run tauri build
+npm run tauri:build
 ```
 
 The built executable will be in `src-tauri/target/release/`
+
+### SQLCipher without Perl (local build)
+
+The project uses SQLCipher via `rusqlite` without vendored OpenSSL, so it **does not require Perl** to compile.
+
+On Windows, set OpenSSL env vars before `tauri:dev`/`tauri:build`:
+
+```powershell
+$env:OPENSSL_DIR="C:\OpenSSL-Win64"
+$env:OPENSSL_LIB_DIR="$env:OPENSSL_DIR\lib"
+$env:OPENSSL_INCLUDE_DIR="$env:OPENSSL_DIR\include"
+npm run tauri:dev
+```
 
 ---
 
