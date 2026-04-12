@@ -1,6 +1,5 @@
 import {
   AppWindow,
-  Cog,
   ChevronRight,
   Loader2,
   RefreshCcw,
@@ -37,7 +36,6 @@ type WorkspaceSidebarProps = {
   onSelectDevice: (deviceId: string) => void;
   onSelectPackage: (pkg: string) => void;
   onRefreshDevices: () => void;
-  onOpenSettings: () => void;
   loadingDevices: boolean;
 };
 
@@ -61,7 +59,6 @@ export function WorkspaceSidebar({
   onSelectDevice,
   onSelectPackage,
   onRefreshDevices,
-  onOpenSettings,
   loadingDevices,
 }: WorkspaceSidebarProps) {
   const hasDeviceSelected = !!selectedDevice;
@@ -273,23 +270,7 @@ export function WorkspaceSidebar({
         </div>
       </ScrollArea>
 
-      <div className="space-y-2 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onOpenSettings}
-          className={cn(
-            "h-10 w-full rounded-2xl",
-            workspaceView === "settings"
-              ? "border-primary bg-primary/10 text-primary"
-              : theme === "dark"
-                ? "border-[#3a3a3a] bg-[#1f1f1f] text-zinc-100 hover:bg-[#262626]"
-                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-          )}
-        >
-          <Cog className="mr-2 h-4 w-4" />
-          {t.navigation.settings}
-        </Button>
+      <div className="pt-4">
         <Button onClick={onRefreshDevices} className="h-11 w-full rounded-2xl bg-slate-950 text-white hover:bg-slate-900 dark:bg-indigo-500/80 dark:hover:bg-indigo-500">
           <RefreshCcw className={cn("mr-2 h-4 w-4", loadingDevices && "animate-spin")} />
           {t.sidebar.refreshAdb}

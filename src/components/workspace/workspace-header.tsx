@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { ChevronRight, Moon, SunMedium } from "lucide-react";
+import { ChevronRight, Cog, Moon, SunMedium } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LanguageDropdown } from "@/components/ui/language-dropdown";
@@ -17,6 +17,8 @@ type WorkspaceHeaderProps = {
   disconnectedLabel: string;
   locale: Locale;
   onLocaleChange: (locale: Locale) => void;
+  isSettingsActive: boolean;
+  onOpenSettings: () => void;
   onToggleTheme: () => void;
 };
 
@@ -29,6 +31,8 @@ export function WorkspaceHeader({
   disconnectedLabel,
   locale,
   onLocaleChange,
+  isSettingsActive,
+  onOpenSettings,
   onToggleTheme,
 }: WorkspaceHeaderProps) {
   return (
@@ -71,6 +75,21 @@ export function WorkspaceHeader({
             {isConnected ? connectedLabel : disconnectedLabel}
           </Badge>
           <LanguageDropdown value={locale} onChange={(value) => onLocaleChange(value as Locale)} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            className={cn(
+              "h-8 w-8 rounded-xl",
+              isSettingsActive
+                ? "bg-primary/10 text-primary"
+                : theme === "dark"
+                  ? "text-slate-200 hover:bg-white/10"
+                  : "text-slate-700 hover:bg-slate-900/10"
+            )}
+          >
+            <Cog className="h-4 w-4" />
+          </Button>
           <Separator orientation="vertical" className={cn("h-6", theme === "dark" ? "bg-white/20" : "bg-slate-300")} />
           <Button
             variant="ghost"

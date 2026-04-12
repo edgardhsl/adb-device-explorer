@@ -59,6 +59,8 @@ export const translations = {
     settings: {
       title: "Configuração do ambiente",
       subtitle: "Defina os caminhos do OpenSSL para builds locais com SQLCipher.",
+      environmentTab: "Ambiente",
+      generalTab: "Geral",
       opensslDir: "OPENSSL_DIR",
       opensslLibDir: "OPENSSL_LIB_DIR",
       opensslIncludeDir: "OPENSSL_INCLUDE_DIR",
@@ -67,6 +69,7 @@ export const translations = {
       loadFailed: "Não foi possível carregar a configuração.",
       saveFailed: "Não foi possível salvar a configuração.",
       configFile: "Arquivo de configuração",
+      preferredLocale: "Idioma preferencial",
     },
     toolbar: {
       filterPlaceholder: "Filtrar linhas...",
@@ -193,6 +196,8 @@ export const translations = {
     settings: {
       title: "Environment configuration",
       subtitle: "Set OpenSSL paths for local SQLCipher builds.",
+      environmentTab: "Environment",
+      generalTab: "General",
       opensslDir: "OPENSSL_DIR",
       opensslLibDir: "OPENSSL_LIB_DIR",
       opensslIncludeDir: "OPENSSL_INCLUDE_DIR",
@@ -201,6 +206,7 @@ export const translations = {
       loadFailed: "Could not load configuration.",
       saveFailed: "Could not save configuration.",
       configFile: "Configuration file",
+      preferredLocale: "Preferred language",
     },
     toolbar: {
       filterPlaceholder: "Filter rows...",
@@ -327,6 +333,8 @@ export const translations = {
     settings: {
       title: "Configuración del entorno",
       subtitle: "Define rutas de OpenSSL para builds locales con SQLCipher.",
+      environmentTab: "Entorno",
+      generalTab: "General",
       opensslDir: "OPENSSL_DIR",
       opensslLibDir: "OPENSSL_LIB_DIR",
       opensslIncludeDir: "OPENSSL_INCLUDE_DIR",
@@ -335,6 +343,7 @@ export const translations = {
       loadFailed: "No se pudo cargar la configuración.",
       saveFailed: "No se pudo guardar la configuración.",
       configFile: "Archivo de configuración",
+      preferredLocale: "Idioma preferido",
     },
     toolbar: {
       filterPlaceholder: "Filtrar filas...",

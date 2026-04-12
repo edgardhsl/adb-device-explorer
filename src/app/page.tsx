@@ -568,7 +568,6 @@ function AppContent() {
           onSelectDevice={selectDevice}
           onSelectPackage={selectPackage}
           onRefreshDevices={() => refetchDevices()}
-          onOpenSettings={() => setWorkspaceView("settings")}
           loadingDevices={loadingDevices}
         />
 
@@ -600,6 +599,8 @@ function AppContent() {
                   toast.error(t.settings.saveFailed);
                 });
             }}
+            isSettingsActive={workspaceView === "settings"}
+            onOpenSettings={() => setWorkspaceView("settings")}
             onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
           />
 

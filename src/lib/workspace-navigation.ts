@@ -1,4 +1,4 @@
-import { Cog, Database, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
+import { Database, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { TranslationKeys } from "@/lib/i18n";
 
@@ -78,16 +78,6 @@ export function buildNavigationGroups(
           helper: t.navigation.databasesHelper,
           enabled: true,
           visible: flags.canOpenDatabases,
-        },
-        {
-          kind: "view",
-          id: "settings",
-          icon: Cog,
-          label: t.navigation.settings,
-          view: "settings",
-          helper: t.navigation.settingsHelper,
-          enabled: true,
-          visible: true,
         },
       ],
     },
