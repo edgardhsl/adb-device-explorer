@@ -5,7 +5,7 @@ test.describe("Feature: Sidebar Global Search", () => {
   test("enables app search only after selecting a device", async ({ page }) => {
     await page.goto("/");
 
-    const appSearch = page.getByPlaceholder(/Search apps|Buscar apps/i);
+    const appSearch = page.locator("aside input").first();
     await expect(appSearch).toBeDisabled();
 
     await selectMockDevice(page);

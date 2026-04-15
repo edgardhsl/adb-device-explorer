@@ -2,13 +2,16 @@ import { expect, test } from "@playwright/test";
 import { openSettingsTable } from "./helpers";
 
 test.describe("Feature: Add Row Dialog", () => {
-  test("opens and closes add row dialog", async ({ page }) => {
+  test("opens and cancels inline add row", async ({ page }) => {
     await openSettingsTable(page);
 
-    await page.getByRole("button", { name: /Adicionar Linha|Add Row|Agregar Fila|Novo|New/i }).click();
-    await expect(page.getByText(/Adicionar Nova Linha|Add New Row|Agregar Nueva Fila/i)).toBeVisible();
+    const addRowInline = page.locator("tbody tr:has(input)").first();
+    await expect(addRowInline).toHaveCount(0);
 
-    await page.getByRole("button", { name: /Cancelar|Cancel/i }).click();
-    await expect(page.getByText(/Adicionar Nova Linha|Add New Row|Agregar Nueva Fila/i)).toHaveCount(0);
+    await page.getByRole("button", { name: /Adicionar Linha|Add Row|Agregar Fila|Novo|New/i }).click();
+    await expect(addRowInline).toBeVisible();
+
+    await addRowInline.locator("button").nth(1).click();
+    await expect(addRowInline).toHaveCount(0);
   });
 });
