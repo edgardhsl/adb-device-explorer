@@ -41,6 +41,7 @@ ADB Fly es una aplicación de escritorio que te permite navegar y gestionar base
 
 ### Software
 - [ADB](https://developer.android.com/studio/command-line/adb) (Android SDK Platform Tools)
+- OpenSSL (solo para build local con SQLCipher)
 - Windows 10/11 (otras plataformas no probadas)
 
 ### Dispositivo Android
@@ -65,13 +66,27 @@ npm install
 
 # Ejecutar en modo desarrollo
 npm run dev
+npm run tauri:dev
 
 # Build para producción
 npm run build
-npm run tauri build
+npm run tauri:build
 ```
 
 El ejecutable estará en `src-tauri/target/release/`
+
+### SQLCipher con crate OpenSSL de Rust
+
+El proyecto usa el crate `openssl` sin build vendorizado de OpenSSL.
+
+Ejecuta:
+
+```powershell
+npm run tauri:dev
+```
+
+Si OpenSSL está configurado (`OPENSSL_DIR` o `OPENSSL_LIB_DIR` + `OPENSSL_INCLUDE_DIR`), SQLCipher se habilita.
+Si no está configurado, la app inicia con fallback SQLite.
 
 ---
 

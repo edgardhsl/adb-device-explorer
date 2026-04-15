@@ -34,6 +34,7 @@ impl DatabaseUseCases {
         device_id: &str,
         package_name: &str,
         db_name: &str,
+        db_key: Option<&str>,
     ) -> Result<Vec<String>, String> {
         log::info!(
             "Listing tables for database: {} on device: {}",
@@ -42,7 +43,7 @@ impl DatabaseUseCases {
         );
         let tables = self
             .repository
-            .list_tables(device_id, package_name, db_name)?;
+            .list_tables(device_id, package_name, db_name, db_key)?;
         log::info!("Found {} tables", tables.len());
         Ok(tables)
     }
@@ -53,10 +54,11 @@ impl DatabaseUseCases {
         package_name: &str,
         db_name: &str,
         table: &str,
+        db_key: Option<&str>,
     ) -> Result<TableSchema, String> {
         log::info!("Getting schema for table: {}", table);
         self.repository
-            .get_table_schema(device_id, package_name, db_name, table)
+            .get_table_schema(device_id, package_name, db_name, table, db_key)
     }
 
     pub fn get_table_data(
@@ -69,6 +71,7 @@ impl DatabaseUseCases {
         page_size: u32,
         sort: Option<SortInfo>,
         filters: Option<Vec<FilterInfo>>,
+        db_key: Option<&str>,
     ) -> Result<TableData, String> {
         log::info!(
             "Getting data for table: {} (page: {}, size: {})",
@@ -85,6 +88,7 @@ impl DatabaseUseCases {
             page_size,
             sort,
             filters,
+            db_key,
         )
     }
 
@@ -94,9 +98,10 @@ impl DatabaseUseCases {
         package_name: &str,
         db_name: &str,
         sql: &str,
+        db_key: Option<&str>,
     ) -> Result<SqlResult, String> {
         log::info!("Executing SQL on table: {}", db_name);
         self.repository
-            .execute_sql(device_id, package_name, db_name, sql)
+            .execute_sql(device_id, package_name, db_name, sql, db_key)
     }
 }

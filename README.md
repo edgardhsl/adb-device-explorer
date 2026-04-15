@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="./public/images/app.png" alt="ADB Fly app screenshot" width="980" />
+  <img src="./public/images/app.webp" alt="ADB Fly app screenshot" width="980" />
 </p>
 
 ---
@@ -63,6 +63,7 @@ With a simple interface, you can explore device apps, view databases, and perfor
 
 ### Software
 - [ADB](https://developer.android.com/studio/command-line/adb) (Android SDK Platform Tools)
+- OpenSSL (only for local SQLCipher builds)
 - Windows 10/11 (other platforms not tested)
 
 ### Android Device
@@ -87,13 +88,27 @@ npm install
 
 # Run in development mode
 npm run dev
+npm run tauri:dev
 
 # Build for production
 npm run build
-npm run tauri build
+npm run tauri:build
 ```
 
 The built executable will be in `src-tauri/target/release/`
+
+### SQLCipher with Rust OpenSSL crate
+
+The project uses the Rust `openssl` crate without vendored OpenSSL builds.
+
+Run:
+
+```powershell
+npm run tauri:dev
+```
+
+If OpenSSL is configured (`OPENSSL_DIR` or `OPENSSL_LIB_DIR` + `OPENSSL_INCLUDE_DIR`), SQLCipher is enabled.
+If OpenSSL is not configured, the app starts with SQLite fallback.
 
 ---
 

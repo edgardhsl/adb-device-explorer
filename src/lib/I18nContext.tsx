@@ -1,18 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { translations, Locale } from "./i18n";
+import { createContext, useCallback, useContext, useState, useEffect, ReactNode } from "react";
+import { translations, Locale, type TranslationKeys } from "./i18n";
 
 type I18nContextType = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: typeof translations[Locale];
+  t: TranslationKeys;
 };
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("pt-BR");
+  const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
     const saved = localStorage.getItem("locale");
@@ -23,10 +23,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setLocale = (newLocale: Locale) => {
+  const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("locale", newLocale);
-  };
+  }, []);
 
   const t = translations[locale];
 

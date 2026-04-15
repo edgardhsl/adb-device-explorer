@@ -4,6 +4,17 @@ export interface Device {
   status: string;
 }
 
+export interface DeviceOverview {
+  android_version: string;
+  cpu_abi: string;
+  total_ram_mb: number;
+  used_ram_mb: number;
+  storage_total_gb: number;
+  storage_used_gb: number;
+  cpu_usage_percent: number;
+  memory_usage_percent: number;
+}
+
 export interface Package {
   name: string;
   label?: string;
@@ -54,6 +65,14 @@ export interface FilterInfo {
 export interface PaginationState {
   pageIndex: number;
   pageSize: number;
+}
+
+export interface AppConfig {
+  openssl_dir: string;
+  openssl_lib_dir: string;
+  openssl_include_dir: string;
+  preferred_locale: string;
+  config_file_path: string;
 }
 
 export type Theme = 'light' | 'dark';

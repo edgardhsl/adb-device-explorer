@@ -16,6 +16,7 @@ pub trait DatabaseRepository: Send + Sync {
         device_id: &str,
         package_name: &str,
         db_name: &str,
+        db_key: Option<&str>,
     ) -> Result<Vec<String>, String>;
     fn get_table_schema(
         &self,
@@ -23,6 +24,7 @@ pub trait DatabaseRepository: Send + Sync {
         package_name: &str,
         db_name: &str,
         table: &str,
+        db_key: Option<&str>,
     ) -> Result<TableSchema, String>;
     fn get_table_data(
         &self,
@@ -34,6 +36,7 @@ pub trait DatabaseRepository: Send + Sync {
         page_size: u32,
         sort: Option<crate::domain::entities::SortInfo>,
         filters: Option<Vec<crate::domain::entities::FilterInfo>>,
+        db_key: Option<&str>,
     ) -> Result<TableData, String>;
     fn execute_sql(
         &self,
@@ -41,5 +44,6 @@ pub trait DatabaseRepository: Send + Sync {
         package_name: &str,
         db_name: &str,
         sql: &str,
+        db_key: Option<&str>,
     ) -> Result<crate::domain::entities::SqlResult, String>;
 }
