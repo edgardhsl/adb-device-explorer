@@ -169,6 +169,6 @@ Yes! After INSERT, UPDATE, or DELETE, the modified database is automatically pus
 
 <div align="center">
 
-**Made with ❤️ by [EdgarHS](https://github.com/edgardhsl)**
+**Made with 💙 by [edgardhsl](https://github.com/edgardhsl)**
 
 </div>
