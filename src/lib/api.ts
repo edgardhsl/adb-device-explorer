@@ -22,8 +22,7 @@ import {
   syncMockChanges,
 } from "./mock-adb";
 
-const shouldUseMockAdb =
-  typeof window !== "undefined" && process.env.NEXT_PUBLIC_E2E_MOCK_ADB === "true";
+const shouldUseMockAdb = process.env.NEXT_PUBLIC_E2E_MOCK_ADB === "true";
 
 export async function listDevices(): Promise<Device[]> {
   if (shouldUseMockAdb) return listMockDevices();
