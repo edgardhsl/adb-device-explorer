@@ -1,6 +1,8 @@
 import type {
+  AppConfig,
   DatabaseInfo,
   Device,
+  DeviceOverview,
   FilterInfo,
   Package,
   SortInfo,
@@ -116,6 +118,20 @@ export async function listMockPackages(deviceId: string): Promise<Package[]> {
   return packagesByDevice[deviceId] ?? [];
 }
 
+export async function getMockDeviceOverview(): Promise<DeviceOverview> {
+  await delay();
+  return {
+    android_version: "15",
+    cpu_abi: "x86_64",
+    total_ram_mb: 8192,
+    used_ram_mb: 3210,
+    storage_total_gb: 128,
+    storage_used_gb: 46,
+    cpu_usage_percent: 22,
+    memory_usage_percent: 39,
+  };
+}
+
 export async function listMockDatabases(
   _deviceId: string,
   packageName: string
@@ -191,4 +207,31 @@ export async function executeMockSql(): Promise<SqlResult> {
 
 export async function syncMockChanges(): Promise<void> {
   await delay();
+}
+
+export async function getMockAppConfig(): Promise<AppConfig> {
+  await delay();
+  return {
+    openssl_dir: "",
+    openssl_lib_dir: "",
+    openssl_include_dir: "",
+    preferred_locale: "en",
+    config_file_path: "/tmp/adbfly.ini",
+  };
+}
+
+export async function saveMockAppConfig(
+  opensslDir: string,
+  opensslLibDir: string,
+  opensslIncludeDir: string,
+  preferredLocale?: string
+): Promise<AppConfig> {
+  await delay();
+  return {
+    openssl_dir: opensslDir,
+    openssl_lib_dir: opensslLibDir,
+    openssl_include_dir: opensslIncludeDir,
+    preferred_locale: preferredLocale ?? "en",
+    config_file_path: "/tmp/adbfly.ini",
+  };
 }

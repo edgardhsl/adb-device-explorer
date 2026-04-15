@@ -1,14 +1,19 @@
 import { expect, test } from "@playwright/test";
+import { selectMockDevice } from "./helpers";
 
 test.describe("Feature: Sidebar Global Search", () => {
-  test("supports global sidebar search and empty state", async ({ page }) => {
+  test("enables app search only after selecting a device", async ({ page }) => {
     await page.goto("/");
 
-    const globalSearch = page.locator("aside input").first();
-    await globalSearch.fill("Mock Android");
-    await expect(page.getByText("Mock Android Device")).toBeVisible();
+    const appSearch = page.getByPlaceholder(/Search apps|Buscar apps/i);
+    await expect(appSearch).toBeDisabled();
 
-    await globalSearch.fill("no-match-value");
-    await expect(page.getByText(/Nenhum resultado|No results|No se encontraron/)).toBeVisible();
+    await selectMockDevice(page);
+    await expect(appSearch).toBeEnabled();
+
+    await appSearch.fill("tools");
+    const appSelect = page.locator("aside").getByRole("combobox").nth(1);
+    await appSelect.click();
+    await expect(page.getByRole("option", { name: /com\.example\.tools\.viewer/i })).toBeVisible();
   });
 });
