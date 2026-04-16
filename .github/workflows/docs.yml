@@ -35,14 +35,14 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           workingDirectory: ${{ github.workspace }}
-          args: --no-progress --verbose --glob docs/**/*.md
+          args: --no-progress --verbose --mode path docs
           fail: true
 
       - name: Check generated site links
         uses: lycheeverse/lychee-action@v2
         with:
           workingDirectory: ${{ github.workspace }}
-          args: --no-progress --verbose --glob site/**/*.html
+          args: --no-progress --verbose --mode path site
           fail: true
 
   deploy:
