@@ -45,7 +45,7 @@ jobs:
             echo "No markdown files found in docs/"
             exit 1
           fi
-          lychee --no-progress --verbose --mode path "${md_files[@]}"
+          lychee --no-progress --verbose "${md_files[@]}"
 
       - name: Check generated site links
         run: |
@@ -54,7 +54,7 @@ jobs:
             echo "No generated html files found in site/"
             exit 1
           fi
-          lychee --no-progress --verbose --mode path "${html_files[@]}"
+          lychee --no-progress --verbose "${html_files[@]}"
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
