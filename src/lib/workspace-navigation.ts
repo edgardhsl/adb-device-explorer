@@ -1,8 +1,8 @@
-import { Database, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
+import { Database, FileText, PackagePlus, ShieldCheck, Smartphone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { TranslationKeys } from "@/lib/i18n";
 
-export type WorkspaceView = "overview" | "databases" | "settings";
+export type WorkspaceView = "overview" | "databases" | "logcat" | "settings";
 
 type NavigationItemBase = {
   id: string;
@@ -33,6 +33,7 @@ export type NavigationGroup = {
 type NavigationFlags = {
   canOpenOverview: boolean;
   canOpenDatabases: boolean;
+  canOpenLogcat: boolean;
   hasSelectedDevice: boolean;
 };
 
@@ -78,6 +79,16 @@ export function buildNavigationGroups(
           helper: t.navigation.databasesHelper,
           enabled: true,
           visible: flags.canOpenDatabases,
+        },
+        {
+          kind: "view",
+          id: "logcat",
+          icon: FileText,
+          label: t.navigation.logcat,
+          view: "logcat",
+          helper: t.navigation.logcatHelper,
+          enabled: true,
+          visible: flags.canOpenLogcat,
         },
       ],
     },
@@ -126,6 +137,10 @@ export function buildBreadcrumbs(t: TranslationKeys, workspaceView: WorkspaceVie
 
   if (workspaceView === "settings") {
     return [t.breadcrumbs.workspace, t.breadcrumbs.settings];
+  }
+
+  if (workspaceView === "logcat") {
+    return [t.breadcrumbs.workspace, t.breadcrumbs.logcat];
   }
 
   return [t.breadcrumbs.workspace, t.breadcrumbs.overview];

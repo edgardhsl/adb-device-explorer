@@ -63,6 +63,23 @@ pub async fn get_device_overview(
 }
 
 #[tauri::command]
+pub async fn get_logcat_logs(
+    state: State<'_, SharedAppState>,
+    device_id: String,
+    package_name: Option<String>,
+    limit: Option<u32>,
+) -> Result<Vec<String>, String> {
+    run_with_state(state, move |app_state| {
+        app_state.device_use_cases.get_logcat_logs(
+            &device_id,
+            package_name.as_deref(),
+            limit.unwrap_or(200),
+        )
+    })
+    .await
+}
+
+#[tauri::command]
 pub async fn list_databases(
     state: State<'_, SharedAppState>,
     device_id: String,
