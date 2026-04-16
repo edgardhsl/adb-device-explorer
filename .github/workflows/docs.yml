@@ -54,7 +54,12 @@ jobs:
             echo "No generated html files found in site/"
             exit 1
           fi
-          lychee --no-progress --verbose "${html_files[@]}"
+          lychee \
+            --no-progress \
+            --verbose \
+            --root-dir site \
+            --exclude '^https://edgardhsl.github.io/adbfly/' \
+            "${html_files[@]}"
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
