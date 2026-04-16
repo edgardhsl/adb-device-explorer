@@ -7,9 +7,10 @@ import dynamic from "next/dynamic";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import { type ChartConfig } from "@/components/ui/chart";
-import { listDevices, listPackages, getDeviceOverview, listDatabases, listTables, getTableData, getTableSchema, executeSql, getAppConfig, saveAppConfig } from "@/lib/api";
+import { listDevices, listPackages, getDeviceOverview, getLogcatLogs, listDatabases, listTables, getTableData, getTableSchema, executeSql, getAppConfig, saveAppConfig } from "@/lib/api";
 import type { AppConfig, SortInfo, FilterInfo, TableSchema } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { compileLogcatFilterQuery, filterLogcatLines, mergeLogSnapshots } from "@/lib/logcat-utils";
 import { useI18n, I18nProvider } from "@/lib/I18nContext";
 import type { Locale } from "@/lib/i18n";
 import { OVERVIEW_USAGE_HISTORY, type UsageHistoryPoint, type WorkspaceView } from "@/lib/workspace-navigation";
@@ -17,6 +18,7 @@ import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { OverviewBackdrop } from "@/components/workspace/overview-backdrop";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { DatabaseWorkspace } from "@/components/workspace/database-workspace";
+import { LogcatWorkspace } from "@/components/workspace/logcat-workspace";
 import { SettingsWorkspace } from "@/components/workspace/settings-workspace";
 import { useWorkspaceState } from "@/hooks/use-workspace-state";
 
@@ -35,6 +37,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const LOGCAT_POLL_LIMIT = 180;
+const LOGCAT_MAX_BUFFER = 1200;
 
 function AppContent() {
   type PendingRowEdit = {
@@ -74,6 +79,10 @@ function AppContent() {
   const [savingAppConfig, setSavingAppConfig] = useState(false);
   const [shouldLoadDiagramSchemas, setShouldLoadDiagramSchemas] = useState(false);
   const [isWindowVisible, setIsWindowVisible] = useState(true);
+  const [isLogcatCapturing, setIsLogcatCapturing] = useState(true);
+  const [onlySelectedAppLogs, setOnlySelectedAppLogs] = useState(false);
+  const [logcatFilterQuery, setLogcatFilterQuery] = useState("");
+  const [logcatLines, setLogcatLines] = useState<string[]>([]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -255,6 +264,28 @@ function AppContent() {
     retry: 2,
   });
 
+  const { data: latestLogcatLines = [], isFetching: fetchingLogcat } = useQuery({
+    queryKey: ["logcat", selectedDevice, onlySelectedAppLogs ? selectedPackage : "", workspaceView, isLogcatCapturing],
+    queryFn: () => {
+      if (!selectedDevice) return Promise.resolve([]);
+      const packageFilter = onlySelectedAppLogs ? selectedPackage ?? undefined : undefined;
+      return getLogcatLogs(selectedDevice, packageFilter, LOGCAT_POLL_LIMIT);
+    },
+    enabled: !!selectedDevice && workspaceView === "logcat" && isLogcatCapturing && isWindowVisible,
+    refetchInterval: 1500,
+    refetchIntervalInBackground: false,
+    staleTime: 0,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (!selectedDevice || latestLogcatLines.length === 0) return;
+
+    setLogcatLines((previous) =>
+      mergeLogSnapshots(previous, latestLogcatLines, LOGCAT_MAX_BUFFER)
+    );
+  }, [latestLogcatLines, selectedDevice]);
+
   useEffect(() => {
     if (!selectedDevice || !deviceOverview || workspaceView !== "overview" || !isWindowVisible) return;
 
@@ -352,6 +383,16 @@ function AppContent() {
     () => packages.filter((p) => p.name.toLowerCase().includes(packageSearch.toLowerCase())),
     [packages, packageSearch]
   );
+
+  const compiledLogcatFilter = useMemo(
+    () => compileLogcatFilterQuery(logcatFilterQuery),
+    [logcatFilterQuery]
+  );
+  const hasInvalidLogcatRegex = compiledLogcatFilter.hasInvalidRegex;
+
+  const filteredLogcatLines = useMemo(() => {
+    return filterLogcatLines(logcatLines, compiledLogcatFilter);
+  }, [compiledLogcatFilter, logcatLines]);
 
   const getErrorMessage = (value: unknown) => {
     if (!value) return "";
@@ -586,6 +627,7 @@ function AppContent() {
     setNewRowData({});
     setLiveUsageHistory([]);
     setShouldLoadDiagramSchemas(false);
+    setLogcatLines([]);
     clearPendingChanges();
   }, []);
 
@@ -599,6 +641,7 @@ function AppContent() {
     setIsAddingInlineRow(false);
     setNewRowData({});
     setShouldLoadDiagramSchemas(false);
+    setLogcatLines([]);
     clearPendingChanges();
   }, []);
 
@@ -647,6 +690,7 @@ function AppContent() {
 
   const {
     isDatabaseView,
+    isLogcatView,
     isSettingsView,
     showOverview,
     hasAnyDevice,
@@ -654,6 +698,7 @@ function AppContent() {
     hasSelectedApp,
     canOpenOverview,
     canOpenDatabases,
+    canOpenLogcat,
     navGroups,
     breadcrumbItems,
     workspaceDescription,
@@ -764,7 +809,7 @@ function AppContent() {
             onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
           />
 
-          <div className={cn("relative z-20 flex-1 overflow-auto", isDatabaseView ? "p-4" : "p-6")}>
+          <div className={cn("relative z-20 flex-1 overflow-auto", isDatabaseView || isLogcatView ? "p-4" : "p-6")}>
             {showOverview && (
               <OverviewSection
                 theme={theme}
@@ -865,6 +910,26 @@ function AppContent() {
               />
             )}
 
+            {isLogcatView && (
+              <LogcatWorkspace
+                theme={theme}
+                t={t}
+                hasSelectedDevice={hasSelectedDevice}
+                selectedPackage={selectedPackage}
+                isCapturing={isLogcatCapturing}
+                onToggleCapture={() => setIsLogcatCapturing((value) => !value)}
+                onClearLogs={() => setLogcatLines([])}
+                filterQuery={logcatFilterQuery}
+                onFilterQueryChange={setLogcatFilterQuery}
+                onlySelectedApp={onlySelectedAppLogs}
+                onToggleOnlySelectedApp={() => setOnlySelectedAppLogs((value) => !value)}
+                invalidFilterPattern={hasInvalidLogcatRegex}
+                entries={filteredLogcatLines}
+                totalEntries={logcatLines.length}
+                fetching={fetchingLogcat}
+              />
+            )}
+
             {isSettingsView && (
               <SettingsWorkspace
                 theme={theme}
@@ -890,6 +955,9 @@ function AppContent() {
             )}
 
             {showOverview && !canOpenOverview && (
+              <OverviewBackdrop theme={theme} message={t.main.connectDeviceOverlay} />
+            )}
+            {isLogcatView && !canOpenLogcat && (
               <OverviewBackdrop theme={theme} message={t.main.connectDeviceOverlay} />
             )}
           </div>

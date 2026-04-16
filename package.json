@@ -21,9 +21,12 @@
     "tauri:dev": "node scripts/tauri-runner.js dev",
     "tauri:build": "node scripts/tauri-runner.js build",
     "test:e2e": "playwright test",
+    "test:unit": "playwright test -c playwright.unit.config.ts",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "tauri:icon": "tauri icon public/images/logo.webp"
+    "tauri:icon": "tauri icon public/images/logo.webp",
+    "docs:serve": "mkdocs serve",
+    "docs:build": "mkdocs build --strict"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",

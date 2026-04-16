@@ -9,3 +9,6 @@ src-tauri/Cargo.lock
 .env.local
 playwright-report/
 test-results/
+
+site/
+.tmp/

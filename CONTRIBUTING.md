@@ -30,9 +30,10 @@ Please be respectful and inclusive when participating in this project. We expect
 2. Create a feature branch
 3. Make your changes
 4. **Mandatory:** Add/update unit, integration, and regression tests. This is a strict project rule to prevent potential new bugs.
-5. Ensure code follows project conventions
-6. Write clear commit messages
-7. Submit a PR with a detailed description
+5. **Mandatory:** Update documentation when feature behavior/status changes (`planning.md` + MkDocs pages EN/PT-BR/ES)
+6. Ensure code follows project conventions
+7. Write clear commit messages
+8. Submit a PR with a detailed description
 
 ## Versioning, Branches, and Tags
 
@@ -52,7 +53,7 @@ npm install
 
 # Run development
 npm run dev
-npm run tauri dev
+npm run tauri:dev
 ```
 
 ## Coding Standards
@@ -69,6 +70,13 @@ Test your changes thoroughly:
 - Test on different devices if applicable
 - Test both light and dark themes
 - Test all supported languages
+
+### Docs checks
+
+```bash
+pip install -r requirements-docs.txt
+mkdocs build --strict
+```
 
 ## Commit Messages
 

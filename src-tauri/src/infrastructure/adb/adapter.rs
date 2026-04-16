@@ -174,6 +174,56 @@ impl AdbAdapter {
         self.run_with_timeout(&["-s", device_id, "shell", command], timeout)
     }
 
+    pub fn get_logcat_logs(
+        &self,
+        device_id: &str,
+        package_name: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<String>, String> {
+        let bounded_limit = limit.clamp(50, 800);
+        let limit_value = bounded_limit.to_string();
+
+        if let Some(package) = package_name {
+            let pid_cmd = format!("pidof -s {}", package);
+            let pid = self
+                .shell_with_timeout(device_id, &pid_cmd, Duration::from_secs(3))
+                .unwrap_or_default()
+                .trim()
+                .to_string();
+
+            if !pid.is_empty() {
+                let args_owned = [
+                    "-s".to_string(),
+                    device_id.to_string(),
+                    "logcat".to_string(),
+                    "-d".to_string(),
+                    "-v".to_string(),
+                    "threadtime".to_string(),
+                    format!("--pid={}", pid),
+                    "-t".to_string(),
+                    limit_value.clone(),
+                ];
+                let args: Vec<&str> = args_owned.iter().map(String::as_str).collect();
+                let output = self.run_with_timeout(&args, Duration::from_secs(8))?;
+                return Ok(normalize_logcat_lines(&output));
+            }
+        }
+
+        let args_owned = [
+            "-s".to_string(),
+            device_id.to_string(),
+            "logcat".to_string(),
+            "-d".to_string(),
+            "-v".to_string(),
+            "threadtime".to_string(),
+            "-t".to_string(),
+            limit_value,
+        ];
+        let args: Vec<&str> = args_owned.iter().map(String::as_str).collect();
+        let output = self.run_with_timeout(&args, Duration::from_secs(8))?;
+        Ok(normalize_logcat_lines(&output))
+    }
+
     pub fn pull_app_file_snapshot(
         &self,
         device_id: &str,
@@ -274,5 +324,29 @@ impl AdbAdapter {
             Duration::from_secs(DEFAULT_TIMEOUT_SECS),
         )
         .map(|_| ())
+    }
+}
+
+fn normalize_logcat_lines(output: &str) -> Vec<String> {
+    output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(ToString::to_string)
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_logcat_lines;
+
+    #[test]
+    fn normalize_logcat_lines_trims_and_removes_empty_lines() {
+        let raw = " 04-15 12:00:00.000  111  111 I Demo: start \n\n   \n04-15 12:00:01.000  111  111 W Demo: warn  ";
+        let lines = normalize_logcat_lines(raw);
+
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0], "04-15 12:00:00.000  111  111 I Demo: start");
+        assert_eq!(lines[1], "04-15 12:00:01.000  111  111 W Demo: warn");
     }
 }

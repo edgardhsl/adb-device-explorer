@@ -24,6 +24,7 @@ pub fn run() {
             presentation::commands::list_devices,
             presentation::commands::list_packages,
             presentation::commands::get_device_overview,
+            presentation::commands::get_logcat_logs,
             presentation::commands::list_databases,
             presentation::commands::list_tables,
             presentation::commands::get_table_schema,

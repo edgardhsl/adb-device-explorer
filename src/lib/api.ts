@@ -17,6 +17,7 @@ import {
   getMockDeviceOverview,
   getMockTableData,
   getMockTableSchema,
+  getMockLogcatLogs,
   listMockDatabases,
   listMockDevices,
   listMockPackages,
@@ -44,6 +45,15 @@ export async function listPackages(deviceId: string): Promise<Package[]> {
 export async function getDeviceOverview(deviceId: string): Promise<DeviceOverview> {
   if (shouldUseMockAdb()) return getMockDeviceOverview();
   return invoke('get_device_overview', { deviceId });
+}
+
+export async function getLogcatLogs(
+  deviceId: string,
+  packageName?: string,
+  limit = 200
+): Promise<string[]> {
+  if (shouldUseMockAdb()) return getMockLogcatLogs(deviceId, packageName, limit);
+  return invoke("get_logcat_logs", { deviceId, packageName, limit });
 }
 
 export async function listDatabases(deviceId: string, packageName: string): Promise<DatabaseInfo[]> {

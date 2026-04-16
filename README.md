@@ -31,9 +31,10 @@
 4. [Installation](#installation)
 5. [Usage](#usage)
 6. [Tech Stack](#tech-stack)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [FAQ](#faq)
+7. [Documentation](#documentation)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [FAQ](#faq)
 
 ---
 
@@ -134,6 +135,20 @@ If OpenSSL is not configured, the app starts with SQLite fallback.
 | Backend | Rust |
 | Database | rusqlite |
 | Communication | ADB |
+
+---
+
+## Documentation
+
+Project docs are maintained with MkDocs Material and i18n (EN/PT-BR/ES).
+
+```bash
+pip install -r requirements-docs.txt
+mkdocs serve
+mkdocs build --strict
+```
+
+On `main`, docs are published to GitHub Pages via workflow.
 
 ---
 

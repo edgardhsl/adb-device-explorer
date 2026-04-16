@@ -82,6 +82,22 @@ const databasesByPackage: Record<string, MockDatabase[]> = {
   "com.example.tools.viewer": [],
 };
 
+const logcatByPackage: Record<string, string[]> = {
+  "com.example.demo.app": [
+    "04-15 14:08:11.233  4123  4123 I DemoApp: App initialized",
+    "04-15 14:08:12.004  4123  4135 D DemoNetwork: Fetching remote config",
+    "04-15 14:08:12.915  4123  4135 W DemoNetwork: Slow response detected (982ms)",
+    "04-15 14:08:14.120  4123  4123 I DemoUI: Dashboard rendered",
+    "04-15 14:08:15.401  4123  4178 E DemoDB: Failed to open optional cache table",
+    "04-15 14:08:16.889  4123  4123 I DemoApp: User opened schema explorer",
+  ],
+  "com.example.tools.viewer": [
+    "04-15 14:08:10.551  5230  5230 I ToolsViewer: Startup complete",
+    "04-15 14:08:13.718  5230  5302 D ToolsSync: Background sync tick",
+    "04-15 14:08:18.902  5230  5230 I ToolsViewer: Ready",
+  ],
+};
+
 const normalize = (value: unknown) => String(value ?? "").toLowerCase();
 
 const applyFilters = (rows: Record<string, unknown>[], filters?: FilterInfo[]) => {
@@ -234,4 +250,18 @@ export async function saveMockAppConfig(
     preferred_locale: preferredLocale ?? "en",
     config_file_path: "/tmp/adbfly.ini",
   };
+}
+
+export async function getMockLogcatLogs(
+  _deviceId: string,
+  packageName?: string,
+  limit = 200
+): Promise<string[]> {
+  await delay();
+  const all = packageName
+    ? (logcatByPackage[packageName] ?? [])
+    : Object.values(logcatByPackage).flat();
+  const suffix = Date.now().toString().slice(-3);
+  const heartbeat = `04-15 14:08:${suffix}  9999  9999 D MockRuntime: heartbeat ${suffix}`;
+  return [...all, heartbeat].slice(-Math.max(1, limit));
 }

@@ -123,6 +123,15 @@ impl DeviceUseCases {
 
         Ok(overview)
     }
+
+    pub fn get_logcat_logs(
+        &self,
+        device_id: &str,
+        package_name: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<String>, String> {
+        self.adb.get_logcat_logs(device_id, package_name, limit)
+    }
 }
 
 fn parse_meminfo_kb(meminfo: &str, key: &str) -> Option<u64> {
