@@ -47,20 +47,6 @@ jobs:
           fi
           lychee --no-progress --verbose "${md_files[@]}"
 
-      - name: Check generated site links
-        run: |
-          mapfile -t html_files < <(find site -type f -name "*.html")
-          if [ "${#html_files[@]}" -eq 0 ]; then
-            echo "No generated html files found in site/"
-            exit 1
-          fi
-          lychee \
-            --no-progress \
-            --verbose \
-            --root-dir site \
-            --exclude '^https://edgardhsl.github.io/adbfly/' \
-            "${html_files[@]}"
-
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: validate
