@@ -20,6 +20,7 @@ export function useWorkspaceState({
 }: UseWorkspaceStateParams) {
   return useMemo(() => {
     const isDatabaseView = workspaceView === "databases";
+    const isFileExplorerView = workspaceView === "fileExplorer";
     const isLogcatView = workspaceView === "logcat";
     const isSettingsView = workspaceView === "settings";
     const showOverview = workspaceView === "overview";
@@ -28,11 +29,13 @@ export function useWorkspaceState({
     const hasSelectedApp = !!selectedPackage;
     const canOpenOverview = hasSelectedDevice;
     const canOpenDatabases = hasSelectedDevice && hasSelectedApp;
+    const canOpenFileExplorer = hasSelectedDevice;
     const canOpenLogcat = hasSelectedDevice;
 
     const navGroups = buildNavigationGroups(t, {
       canOpenOverview,
       canOpenDatabases,
+      canOpenFileExplorer,
       canOpenLogcat,
       hasSelectedDevice,
     });
@@ -43,6 +46,8 @@ export function useWorkspaceState({
       ? t.main.overviewDescription
       : isDatabaseView
         ? t.main.databasesDescription
+        : isFileExplorerView
+          ? t.main.fileExplorerDescription
         : isLogcatView
           ? t.main.logcatDescription
         : t.main.settingsDescription;
@@ -50,6 +55,7 @@ export function useWorkspaceState({
     return {
       isDatabaseView,
       isLogcatView,
+      isFileExplorerView,
       isSettingsView,
       showOverview,
       hasAnyDevice,
@@ -57,6 +63,7 @@ export function useWorkspaceState({
       hasSelectedApp,
       canOpenOverview,
       canOpenDatabases,
+      canOpenFileExplorer,
       canOpenLogcat,
       navGroups,
       breadcrumbItems,

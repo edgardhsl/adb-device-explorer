@@ -2,6 +2,7 @@ import type {
   AppConfig,
   DatabaseInfo,
   Device,
+  DeviceFileEntry,
   DeviceOverview,
   FilterInfo,
   Package,
@@ -95,6 +96,26 @@ const logcatByPackage: Record<string, string[]> = {
     "04-15 14:08:10.551  5230  5230 I ToolsViewer: Startup complete",
     "04-15 14:08:13.718  5230  5302 D ToolsSync: Background sync tick",
     "04-15 14:08:18.902  5230  5230 I ToolsViewer: Ready",
+  ],
+};
+
+const mockFileTree: Record<string, DeviceFileEntry[]> = {
+  "/sdcard": [
+    { name: "Download", full_path: "/sdcard/Download", is_directory: true },
+    { name: "Android", full_path: "/sdcard/Android", is_directory: true },
+    { name: "Documents", full_path: "/sdcard/Documents", is_directory: true },
+    { name: "notes.txt", full_path: "/sdcard/notes.txt", is_directory: false, size_bytes: 1642 },
+  ],
+  "/sdcard/Download": [
+    { name: "build-debug.apk", full_path: "/sdcard/Download/build-debug.apk", is_directory: false, size_bytes: 7_422_912 },
+    { name: "export.csv", full_path: "/sdcard/Download/export.csv", is_directory: false, size_bytes: 98_400 },
+  ],
+  "/sdcard/Android": [
+    { name: "data", full_path: "/sdcard/Android/data", is_directory: true },
+    { name: "media", full_path: "/sdcard/Android/media", is_directory: true },
+  ],
+  "/sdcard/Documents": [
+    { name: "readme.md", full_path: "/sdcard/Documents/readme.md", is_directory: false, size_bytes: 3021 },
   ],
 };
 
@@ -264,4 +285,13 @@ export async function getMockLogcatLogs(
   const suffix = Date.now().toString().slice(-3);
   const heartbeat = `04-15 14:08:${suffix}  9999  9999 D MockRuntime: heartbeat ${suffix}`;
   return [...all, heartbeat].slice(-Math.max(1, limit));
+}
+
+export async function listMockDeviceFiles(
+  _deviceId: string,
+  path?: string
+): Promise<DeviceFileEntry[]> {
+  await delay();
+  const target = path?.trim() ? path.trim() : "/sdcard";
+  return mockFileTree[target] ?? [];
 }

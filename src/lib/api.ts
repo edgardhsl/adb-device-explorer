@@ -3,6 +3,7 @@ import type {
   AppConfig,
   DatabaseInfo,
   Device,
+  DeviceFileEntry,
   DeviceOverview,
   FilterInfo,
   Package,
@@ -15,6 +16,7 @@ import {
   executeMockSql,
   getMockAppConfig,
   getMockDeviceOverview,
+  listMockDeviceFiles,
   getMockTableData,
   getMockTableSchema,
   getMockLogcatLogs,
@@ -45,6 +47,14 @@ export async function listPackages(deviceId: string): Promise<Package[]> {
 export async function getDeviceOverview(deviceId: string): Promise<DeviceOverview> {
   if (shouldUseMockAdb()) return getMockDeviceOverview();
   return invoke('get_device_overview', { deviceId });
+}
+
+export async function listDeviceFiles(
+  deviceId: string,
+  path?: string
+): Promise<DeviceFileEntry[]> {
+  if (shouldUseMockAdb()) return listMockDeviceFiles(deviceId, path);
+  return invoke("list_device_files", { deviceId, path });
 }
 
 export async function getLogcatLogs(
