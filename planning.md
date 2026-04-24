@@ -7,7 +7,7 @@
 
 ## Device
 - Overview (`planned`) - `feature/device_overview#minor`
-- File Explorer (`planned`) - `feature/device_file_explorer#minor`
+- File Explorer (`done`) - `feature/device_file_explorer#minor`
 - Running Apps (`planned`) - `feature/device_running_apps#minor`
 - Processes (`planned`) - `feature/device_processes#minor`
 - Background Tasks (`planned`) - `feature/device_background_tasks#minor`

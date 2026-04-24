@@ -7,8 +7,8 @@ import dynamic from "next/dynamic";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import { type ChartConfig } from "@/components/ui/chart";
-import { listDevices, listPackages, getDeviceOverview, getLogcatLogs, listDatabases, listTables, getTableData, getTableSchema, executeSql, getAppConfig, saveAppConfig } from "@/lib/api";
-import type { AppConfig, SortInfo, FilterInfo, TableSchema } from "@/lib/types";
+import { listDevices, listPackages, getDeviceOverview, listDeviceFiles, getLogcatLogs, listDatabases, listTables, getTableData, getTableSchema, executeSql, getAppConfig, saveAppConfig } from "@/lib/api";
+import type { AppConfig, DeviceFileEntry, SortInfo, FilterInfo, TableSchema } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { compileLogcatFilterQuery, filterLogcatLines, mergeLogSnapshots } from "@/lib/logcat-utils";
 import { useI18n, I18nProvider } from "@/lib/I18nContext";
@@ -18,6 +18,7 @@ import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { OverviewBackdrop } from "@/components/workspace/overview-backdrop";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { DatabaseWorkspace } from "@/components/workspace/database-workspace";
+import { FileExplorerWorkspace } from "@/components/workspace/file-explorer-workspace";
 import { LogcatWorkspace } from "@/components/workspace/logcat-workspace";
 import { SettingsWorkspace } from "@/components/workspace/settings-workspace";
 import { useWorkspaceState } from "@/hooks/use-workspace-state";
@@ -40,6 +41,7 @@ const queryClient = new QueryClient({
 
 const LOGCAT_POLL_LIMIT = 180;
 const LOGCAT_MAX_BUFFER = 1200;
+const FILE_EXPLORER_ROOT_PATH = "/sdcard";
 
 function AppContent() {
   type PendingRowEdit = {
@@ -83,6 +85,8 @@ function AppContent() {
   const [onlySelectedAppLogs, setOnlySelectedAppLogs] = useState(false);
   const [logcatFilterQuery, setLogcatFilterQuery] = useState("");
   const [logcatLines, setLogcatLines] = useState<string[]>([]);
+  const [fileExplorerPath, setFileExplorerPath] = useState(FILE_EXPLORER_ROOT_PATH);
+  const [fileExplorerSearch, setFileExplorerSearch] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -236,6 +240,8 @@ function AppContent() {
     setEditingCell(null);
     setPendingRowEdits({});
     setLiveUsageHistory([]);
+    setFileExplorerPath(FILE_EXPLORER_ROOT_PATH);
+    setFileExplorerSearch("");
   }, [devices, selectedDevice]);
 
   const {
@@ -274,6 +280,20 @@ function AppContent() {
     enabled: !!selectedDevice && workspaceView === "logcat" && isLogcatCapturing && isWindowVisible,
     refetchInterval: 1500,
     refetchIntervalInBackground: false,
+    staleTime: 0,
+    retry: 1,
+  });
+
+  const {
+    data: fileExplorerEntries = [],
+    isFetching: fetchingFileExplorer,
+    isError: fileExplorerError,
+    refetch: refetchFileExplorer,
+  } = useQuery({
+    queryKey: ["fileExplorer", selectedDevice, workspaceView, fileExplorerPath],
+    queryFn: () =>
+      selectedDevice ? listDeviceFiles(selectedDevice, fileExplorerPath) : Promise.resolve([] as DeviceFileEntry[]),
+    enabled: !!selectedDevice && workspaceView === "fileExplorer",
     staleTime: 0,
     retry: 1,
   });
@@ -628,6 +648,8 @@ function AppContent() {
     setLiveUsageHistory([]);
     setShouldLoadDiagramSchemas(false);
     setLogcatLines([]);
+    setFileExplorerPath(FILE_EXPLORER_ROOT_PATH);
+    setFileExplorerSearch("");
     clearPendingChanges();
   }, []);
 
@@ -690,6 +712,7 @@ function AppContent() {
 
   const {
     isDatabaseView,
+    isFileExplorerView,
     isLogcatView,
     isSettingsView,
     showOverview,
@@ -698,6 +721,7 @@ function AppContent() {
     hasSelectedApp,
     canOpenOverview,
     canOpenDatabases,
+    canOpenFileExplorer,
     canOpenLogcat,
     navGroups,
     breadcrumbItems,
@@ -809,7 +833,7 @@ function AppContent() {
             onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
           />
 
-          <div className={cn("relative z-20 flex-1 overflow-auto", isDatabaseView || isLogcatView ? "p-4" : "p-6")}>
+          <div className={cn("relative z-20 flex-1 overflow-auto", isDatabaseView || isFileExplorerView || isLogcatView ? "p-4" : "p-6")}>
             {showOverview && (
               <OverviewSection
                 theme={theme}
@@ -910,6 +934,33 @@ function AppContent() {
               />
             )}
 
+            {isFileExplorerView && (
+              <FileExplorerWorkspace
+                theme={theme}
+                t={t}
+                hasSelectedDevice={hasSelectedDevice}
+                currentPath={fileExplorerPath}
+                entries={fileExplorerEntries}
+                loading={fetchingFileExplorer}
+                loadError={fileExplorerError}
+                searchQuery={fileExplorerSearch}
+                onSearchQueryChange={setFileExplorerSearch}
+                onOpenEntry={(entry) => {
+                  if (!entry.is_directory) return;
+                  setFileExplorerPath(entry.full_path);
+                }}
+                onNavigateUp={() => {
+                  if (fileExplorerPath === "/" || fileExplorerPath === FILE_EXPLORER_ROOT_PATH) return;
+                  const parent = fileExplorerPath.split("/").slice(0, -1).join("/") || "/";
+                  setFileExplorerPath(parent);
+                }}
+                onGoRoot={() => setFileExplorerPath(FILE_EXPLORER_ROOT_PATH)}
+                onRetry={() => {
+                  void refetchFileExplorer();
+                }}
+              />
+            )}
+
             {isLogcatView && (
               <LogcatWorkspace
                 theme={theme}
@@ -958,6 +1009,9 @@ function AppContent() {
               <OverviewBackdrop theme={theme} message={t.main.connectDeviceOverlay} />
             )}
             {isLogcatView && !canOpenLogcat && (
+              <OverviewBackdrop theme={theme} message={t.main.connectDeviceOverlay} />
+            )}
+            {isFileExplorerView && !canOpenFileExplorer && (
               <OverviewBackdrop theme={theme} message={t.main.connectDeviceOverlay} />
             )}
           </div>

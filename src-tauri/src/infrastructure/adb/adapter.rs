@@ -1,4 +1,4 @@
-use crate::domain::entities::{Device, Package};
+use crate::domain::entities::{Device, DeviceFileEntry, Package};
 use std::io::Read;
 use std::process::{Command, Stdio};
 use std::thread;
@@ -224,6 +224,50 @@ impl AdbAdapter {
         Ok(normalize_logcat_lines(&output))
     }
 
+    pub fn list_device_files(
+        &self,
+        device_id: &str,
+        path: Option<&str>,
+    ) -> Result<Vec<DeviceFileEntry>, String> {
+        let target = normalize_remote_path(path);
+        let escaped = escape_single_quotes(&target);
+        let command = format!(
+            "sh -c 'target='\"'\"'{}'\"'\"'; if [ ! -d \"$target\" ]; then exit 2; fi; ls -a -1 -p \"$target\"'",
+            escaped
+        );
+        let output = self.shell_with_timeout(device_id, &command, Duration::from_secs(6))?;
+
+        let mut entries = output
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty() && *line != "." && *line != "..")
+            .map(|line| {
+                let is_directory = line.ends_with('/');
+                let name = line.trim_end_matches('/').to_string();
+                let full_path = if target == "/" {
+                    format!("/{}", name)
+                } else {
+                    format!("{}/{}", target.trim_end_matches('/'), name)
+                };
+
+                DeviceFileEntry {
+                    name,
+                    full_path,
+                    is_directory,
+                    size_bytes: None,
+                }
+            })
+            .collect::<Vec<_>>();
+
+        entries.sort_by(|a, b| match (a.is_directory, b.is_directory) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+        });
+
+        Ok(entries)
+    }
+
     pub fn pull_app_file_snapshot(
         &self,
         device_id: &str,
@@ -336,9 +380,31 @@ fn normalize_logcat_lines(output: &str) -> Vec<String> {
         .collect()
 }
 
+fn escape_single_quotes(input: &str) -> String {
+    input.replace('\'', "'\"'\"'")
+}
+
+fn normalize_remote_path(path: Option<&str>) -> String {
+    let candidate = path
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("/sdcard");
+
+    if candidate == "/" {
+        return "/".to_string();
+    }
+
+    let normalized = candidate.trim_end_matches('/');
+    if normalized.is_empty() {
+        "/sdcard".to_string()
+    } else {
+        normalized.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::normalize_logcat_lines;
+    use super::{escape_single_quotes, normalize_logcat_lines, normalize_remote_path};
 
     #[test]
     fn normalize_logcat_lines_trims_and_removes_empty_lines() {
@@ -348,5 +414,19 @@ mod tests {
         assert_eq!(lines.len(), 2);
         assert_eq!(lines[0], "04-15 12:00:00.000  111  111 I Demo: start");
         assert_eq!(lines[1], "04-15 12:00:01.000  111  111 W Demo: warn");
+    }
+
+    #[test]
+    fn normalize_remote_path_defaults_to_sdcard_and_trims_trailing_slash() {
+        assert_eq!(normalize_remote_path(None), "/sdcard");
+        assert_eq!(normalize_remote_path(Some("")), "/sdcard");
+        assert_eq!(normalize_remote_path(Some("/sdcard/")), "/sdcard");
+        assert_eq!(normalize_remote_path(Some("/")), "/");
+    }
+
+    #[test]
+    fn escape_single_quotes_applies_shell_safe_pattern() {
+        let escaped = escape_single_quotes("/sdcard/O'Brien");
+        assert_eq!(escaped, "/sdcard/O'\"'\"'Brien");
     }
 }

@@ -26,6 +26,14 @@ pub struct DeviceOverview {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceFileEntry {
+    pub name: String,
+    pub full_path: String,
+    pub is_directory: bool,
+    pub size_bytes: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseInfo {
     pub name: String,
     pub path: String,

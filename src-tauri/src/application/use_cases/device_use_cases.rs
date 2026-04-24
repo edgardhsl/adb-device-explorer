@@ -1,4 +1,4 @@
-use crate::domain::entities::{Device, DeviceOverview, Package};
+use crate::domain::entities::{Device, DeviceFileEntry, DeviceOverview, Package};
 use crate::infrastructure::adb::AdbAdapter;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -131,6 +131,14 @@ impl DeviceUseCases {
         limit: u32,
     ) -> Result<Vec<String>, String> {
         self.adb.get_logcat_logs(device_id, package_name, limit)
+    }
+
+    pub fn list_device_files(
+        &self,
+        device_id: &str,
+        path: Option<&str>,
+    ) -> Result<Vec<DeviceFileEntry>, String> {
+        self.adb.list_device_files(device_id, path)
     }
 }
 

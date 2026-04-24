@@ -80,6 +80,20 @@ pub async fn get_logcat_logs(
 }
 
 #[tauri::command]
+pub async fn list_device_files(
+    state: State<'_, SharedAppState>,
+    device_id: String,
+    path: Option<String>,
+) -> Result<Vec<crate::domain::entities::DeviceFileEntry>, String> {
+    run_with_state(state, move |app_state| {
+        app_state
+            .device_use_cases
+            .list_device_files(&device_id, path.as_deref())
+    })
+    .await
+}
+
+#[tauri::command]
 pub async fn list_databases(
     state: State<'_, SharedAppState>,
     device_id: String,

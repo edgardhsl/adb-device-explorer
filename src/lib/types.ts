@@ -15,6 +15,13 @@ export interface DeviceOverview {
   memory_usage_percent: number;
 }
 
+export interface DeviceFileEntry {
+  name: string;
+  full_path: string;
+  is_directory: boolean;
+  size_bytes?: number;
+}
+
 export interface Package {
   name: string;
   label?: string;
